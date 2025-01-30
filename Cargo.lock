@@ -48,6 +48,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8f68f53c83ab957f72c32642f3868eec03eb974d1fb82e453128456482613d36"
 
 [[package]]
+name = "byte-slice-cast"
+version = "1.2.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c3ac9f8b63eca6fd385229b3675f6cc0dc5c8a5c8a54a59d4f52ffd670d87b0c"
+
+[[package]]
 name = "bytemuck"
 version = "1.21.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -166,6 +172,24 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn",
+]
+
+[[package]]
+name = "display-interface"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7ba2aab1ef3793e6f7804162debb5ac5edb93b3d650fbcc5aeb72fcd0e6c03a0"
+
+[[package]]
+name = "display-interface-spi"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f86b9ec30048b1955da2038fcc3c017f419ab21bb0001879d16c0a3749dc6b7a"
+dependencies = [
+ "byte-slice-cast",
+ "display-interface",
+ "embedded-hal 1.0.0",
+ "embedded-hal-async",
 ]
 
 [[package]]
@@ -711,11 +735,14 @@ dependencies = [
 ]
 
 [[package]]
-name = "gc9a01"
-version = "0.2.0"
-source = "git+https://github.com/Erik1000/gc9a01.git#49961995a3bc21315f598cacb253eab0becf9085"
+name = "gc9a01-rs"
+version = "0.4.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "eeb2ce3431e0797e8f9d96b8d414129a748d79a2745f1ced6fbff31cbdd4a86b"
 dependencies = [
- "embedded-graphics",
+ "display-interface",
+ "display-interface-spi",
+ "embedded-graphics-core",
  "embedded-hal 1.0.0",
 ]
 
@@ -1100,13 +1127,14 @@ dependencies = [
  "critical-section",
  "defmt",
  "defmt-rtt",
+ "display-interface-spi",
  "embedded-graphics",
  "embedded-hal 1.0.0",
  "embedded-hal-bus",
  "esp-alloc",
  "esp-backtrace",
  "esp-hal",
- "gc9a01",
+ "gc9a01-rs",
  "heapless",
 ]
 
