@@ -42,14 +42,6 @@ fn main() -> ! {
 
     let mut delay = Delay::new();
 
-    // Split GPIO for peripherals blcok
-    let sclk = peripherals.GPIO6;
-    let mosi = peripherals.GPIO5;
-    let cs = peripherals.GPIO7;
-    let rs = peripherals.GPIO4;
-    let reset = peripherals.GPIO8;
-    let bl = peripherals.GPIO9;
-
     // Create SPI driver
     let spi = Spi::new(
         peripherals.SPI2,
@@ -58,19 +50,19 @@ fn main() -> ! {
             .with_mode(Mode::_0),
     )
     .unwrap()
-    .with_sck(sclk)
-    .with_mosi(mosi);
+    .with_sck(peripherals.GPIO6)
+    .with_mosi(peripherals.GPIO5);
     //.with_cs(cs);
 
     // Create output drivers from GPIOs
-    let rs_out = Output::new(rs, Level::High);
-    let cs_out = Output::new(cs, Level::High);
-    let mut bl_out = Output::new(bl, Level::Low);
-    let mut reset_out = Output::new(reset, Level::High);
+    let rs = Output::new(peripherals.GPIO4, Level::High);
+    let cs = Output::new(peripherals.GPIO7, Level::High);
+    let mut bl = Output::new(peripherals.GPIO9, Level::Low);
+    let mut display_reset = Output::new(peripherals.GPIO8, Level::High);
 
     // Create SPI device and display interface adapter
-    let display_dev = ExclusiveDevice::new_no_delay(spi, cs_out).unwrap();
-    let display_iface = SPIDisplayInterface::new(display_dev, rs_out);
+    let display_dev = ExclusiveDevice::new_no_delay(spi, cs).unwrap();
+    let display_iface = SPIDisplayInterface::new(display_dev, rs);
 
     // Create the display driver
     let mut display = Gc9a01::new(
@@ -80,7 +72,7 @@ fn main() -> ! {
     )
     .into_buffered_graphics();
 
-    if display.reset(&mut reset_out, &mut delay).is_err() {
+    if display.reset(&mut display_reset, &mut delay).is_err() {
         error!("Display reset error");
         loop {}
     }
@@ -96,7 +88,7 @@ fn main() -> ! {
     }
 
     // Show must go on !
-    bl_out.set_high();
+    bl.set_high();
 
     let norm_style = MonoTextStyle::new(&FONT_7X13, RgbColor::RED);
 
