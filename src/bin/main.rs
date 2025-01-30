@@ -4,7 +4,7 @@
 use defmt::info;
 use esp_hal::clock::CpuClock;
 use esp_hal::delay::Delay;
-use esp_hal::gpio::{Level, Output, OutputPin};
+use esp_hal::gpio::{Level, Output};
 use esp_hal::main;
 use esp_hal::spi::{
     master::{Config, Spi},
@@ -21,8 +21,7 @@ use embedded_graphics::{
     draw_target::DrawTarget,
     mono_font::{ascii::FONT_7X13, MonoTextStyle},
     prelude::*,
-    primitives::{Line, PrimitiveStyle},
-    text::{renderer::CharacterStyle, Text},
+    text::Text,
 };
 
 use core::fmt::Write;
@@ -51,7 +50,7 @@ fn main() -> ! {
     let reset = peripherals.GPIO8;
     let bl = peripherals.GPIO9;
 
-    let mut spi = Spi::new(
+    let spi = Spi::new(
         peripherals.SPI2,
         Config::default()
             .with_frequency(10.MHz())
@@ -64,24 +63,28 @@ fn main() -> ! {
 
     let rs_out = Output::new(rs, Level::High);
     let cs_out = Output::new(cs, Level::High);
-    let bl_out = Output::new(bl, Level::High);
+    let mut bl_out = Output::new(bl, Level::Low);
 
     let mut reset_out = Output::new(reset, Level::High);
 
-    let mut display_dev = ExclusiveDevice::new_no_delay(spi, cs_out).unwrap();
+    let display_dev = ExclusiveDevice::new_no_delay(spi, cs_out).unwrap();
     let mut display = GC9A01::new(display_dev, rs_out);
 
     // Reset display controller
+    delay.delay_ms(100);
     reset_out.set_low();
     delay.delay_ms(100);
     reset_out.set_high();
     delay.delay_ms(100);
 
+    bl_out.set_high();
+
     display.setup();
+    delay.delay_ms(100);
+
     display.clear(RgbColor::BLACK).unwrap();
 
-
-    let mut norm_style = MonoTextStyle::new(&FONT_7X13, RgbColor::CYAN);
+    let norm_style = MonoTextStyle::new(&FONT_7X13, RgbColor::CYAN);
 
     let mut buffer: String<16> = String::new();
 
