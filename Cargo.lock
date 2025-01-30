@@ -202,6 +202,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "either"
+version = "1.13.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "60b1af1c220855b6ceac025d3f6ecdd2b7c4894bfe9cd9bda4fbb4bc7c0d4cf0"
+
+[[package]]
 name = "embassy-embedded-hal"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1026,6 +1032,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "rotary-encoder-hal"
+version = "0.5.0"
+source = "git+https://github.com/tlhenvironment/rotary-encoder-hal.git#591a1b0d50f41c8ad48bec949ca01aced01d36e3"
+dependencies = [
+ "either",
+ "embedded-hal 1.0.0",
+]
+
+[[package]]
 name = "rustversion"
 version = "1.0.19"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1127,7 +1142,6 @@ dependencies = [
  "critical-section",
  "defmt",
  "defmt-rtt",
- "display-interface-spi",
  "embedded-graphics",
  "embedded-hal 1.0.0",
  "embedded-hal-bus",
@@ -1136,6 +1150,7 @@ dependencies = [
  "esp-hal",
  "gc9a01-rs",
  "heapless",
+ "rotary-encoder-hal",
 ]
 
 [[package]]

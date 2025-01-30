@@ -4,7 +4,7 @@
 // ESP32 Hardware abstraction
 use esp_hal::clock::CpuClock;
 use esp_hal::delay::Delay;
-use esp_hal::gpio::{Level, Output};
+use esp_hal::gpio::{Input, Level, Output, Pull};
 use esp_hal::main;
 use esp_hal::spi::{
     master::{Config, Spi},
@@ -24,6 +24,9 @@ use embedded_graphics::{
 // Screen driver
 use gc9a01::{prelude::*, Gc9a01, SPIDisplayInterface};
 
+// Rotary encoder
+use rotary_encoder_hal::{Direction, Rotary};
+
 // heap-less string buffer
 use heapless::String;
 
@@ -41,6 +44,11 @@ fn main() -> ! {
     let peripherals = esp_hal::init(config);
 
     let mut delay = Delay::new();
+
+    let pin_a = Input::new(peripherals.GPIO41, Pull::None);
+    let pin_b = Input::new(peripherals.GPIO40, Pull::None);
+
+    let mut encoder = Rotary::new(pin_a, pin_b);
 
     // Create SPI driver
     let spi = Spi::new(
@@ -92,23 +100,42 @@ fn main() -> ! {
 
     let norm_style = MonoTextStyle::new(&FONT_7X13, RgbColor::RED);
 
-    let mut buffer: String<16> = String::new();
+    let mut buffer: String<64> = String::new();
 
     esp_alloc::heap_allocator!(72 * 1024);
 
-    if write!(&mut buffer, "TEST").is_ok() {
-        // Create a text at position (20, 30) and draw it using the previously defined style
-        Text::new(&buffer, Point::new(100, 100), norm_style)
-            .draw(&mut display)
-            .unwrap();
-        if display.flush().is_err() {
-            error!("Display flush error");
-        }
-    }
-
+    let mut pos: u32 = 50;
     loop {
-        info!("Hello world!");
-        delay.delay_millis(500);
+        match encoder.update().unwrap() {
+            Direction::Clockwise => {
+                pos += 1;
+                info!("UP");
+            }
+            Direction::CounterClockwise => {
+                pos -= 1;
+                info!("DOWN");
+            }
+            Direction::None => {
+                info!("NOP");
+            }
+        }
+
+        buffer.clear();
+        if write!(&mut buffer, "Position {}", pos).is_ok() {
+            // Create a text at position (20, 30) and draw it using the previously defined style
+            Text::new(&buffer, Point::new(100, 100), norm_style)
+                .draw(&mut display)
+                .unwrap();
+            if display.flush().is_err() {
+                error!("Display flush error");
+            }
+        } else {
+            error!("Buffer overflow");
+        }
+
+        info!("Position {}", pos);
+
+        //delay.delay_millis(50);
     }
 
     // for inspiration have a look at the examples at https://github.com/esp-rs/esp-hal/tree/v0.23.1/examples/src/bin
