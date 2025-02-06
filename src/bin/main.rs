@@ -3,17 +3,7 @@
 
 // ESP32 Hardware abstraction
 use esp_hal::clock::CpuClock;
-use esp_hal::delay::Delay;
-use esp_hal::gpio::{Input, Level, Output, Pull};
 use esp_hal::main;
-use esp_hal::spi::{
-    master::{Config, Spi},
-    Mode,
-};
-use esp_hal::time::RateExtU32;
-
-// Generic hardware abstraction
-use embedded_hal_bus::spi::ExclusiveDevice;
 
 // Embedded graphics
 use embedded_graphics::{
@@ -23,13 +13,13 @@ use embedded_graphics::{
     text::Text,
 };
 // Screen driver
-use gc9a01::{prelude::*, Gc9a01, SPIDisplayInterface};
 
 // Rotary encoder
-use rotary_encoder_hal::{Direction, Rotary};
+use rotary_encoder_hal::Direction;
 
 // heap-less string buffer
 use heapless::String;
+use test_m5_dial::m5dial;
 
 // Logging stuff
 use core::fmt::Write;
@@ -44,60 +34,10 @@ fn main() -> ! {
     let config = esp_hal::Config::default().with_cpu_clock(CpuClock::max());
     let peripherals = esp_hal::init(config);
 
-    let mut delay = Delay::new();
-
-    let pin_a = Input::new(peripherals.GPIO41, Pull::None);
-    let pin_b = Input::new(peripherals.GPIO40, Pull::None);
-
-    let mut encoder = Rotary::new(pin_a, pin_b);
-
-    // Create SPI driver
-    let spi = Spi::new(
-        peripherals.SPI2,
-        Config::default()
-            .with_frequency(50.MHz())
-            .with_mode(Mode::_0),
-    )
-    .unwrap()
-    .with_sck(peripherals.GPIO6)
-    .with_mosi(peripherals.GPIO5);
-    //.with_cs(cs);
-
-    // Create output drivers from GPIOs
-    let rs = Output::new(peripherals.GPIO4, Level::High);
-    let cs = Output::new(peripherals.GPIO7, Level::High);
-    let mut bl = Output::new(peripherals.GPIO9, Level::Low);
-    let mut display_reset = Output::new(peripherals.GPIO8, Level::High);
-
-    // Create SPI device and display interface adapter
-    let display_dev = ExclusiveDevice::new_no_delay(spi, cs).unwrap();
-    let display_iface = SPIDisplayInterface::new(display_dev, rs);
-
-    // Create the display driver
-    let mut display = Gc9a01::new(
-        display_iface,
-        DisplayResolution240x240,
-        DisplayRotation::Rotate180,
-    )
-    .into_buffered_graphics();
-
-    if display.reset(&mut display_reset, &mut delay).is_err() {
-        error!("Display reset error");
-        loop {}
-    }
-    // Init and clear display
-    if display.init(&mut delay).is_err() {
-        error!("Display Init error");
-        loop {}
-    }
-    display.clear();
-    display.fill(0x0);
-    if display.flush().is_err() {
-        error!("Display flush error");
-    }
+    let mut board = m5dial::init(peripherals);
 
     // Show must go on !
-    bl.set_high();
+    board.display_bl.set_high();
 
     const NORM_STYLE: MonoTextStyle<Rgb565> = MonoTextStyle::new(&THE_FONT, RgbColor::BLUE);
 
@@ -108,7 +48,7 @@ fn main() -> ! {
     let mut pos: i32 = 1;
     let mut need_redraw = true;
     loop {
-        match encoder.update().unwrap() {
+        match board.encoder.update().unwrap() {
             Direction::Clockwise => {
                 pos += 1;
                 info!("UP");
@@ -127,18 +67,18 @@ fn main() -> ! {
         if need_redraw {
             buffer.clear();
             if write!(&mut buffer, "Position {}", pos).is_ok() {
-                display.clear();
+                board.display.clear();
                 // Create a text at position (20, 30) and draw it using the previously defined style
                 Text::with_alignment(
                     &buffer,
-                    display.bounding_box().center(),
+                    board.display.bounding_box().center(),
                     NORM_STYLE,
                     embedded_graphics::text::Alignment::Center,
                 )
-                .draw(&mut display)
+                .draw(&mut board.display)
                 .unwrap();
 
-                if display.flush().is_err() {
+                if board.display.flush().is_err() {
                     error!("Display flush error");
                 }
             } else {
