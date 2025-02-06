@@ -17,7 +17,8 @@ use embedded_hal_bus::spi::ExclusiveDevice;
 
 // Embedded graphics
 use embedded_graphics::{
-    mono_font::{ascii::FONT_7X13, MonoTextStyle},
+    mono_font::{ascii::FONT_10X20 as THE_FONT, MonoTextStyle},
+    pixelcolor::Rgb565,
     prelude::*,
     text::Text,
 };
@@ -98,39 +99,52 @@ fn main() -> ! {
     // Show must go on !
     bl.set_high();
 
-    let norm_style = MonoTextStyle::new(&FONT_7X13, RgbColor::RED);
+    const NORM_STYLE: MonoTextStyle<Rgb565> = MonoTextStyle::new(&THE_FONT, RgbColor::BLUE);
 
     let mut buffer: String<64> = String::new();
 
     esp_alloc::heap_allocator!(72 * 1024);
 
-    let mut pos: u32 = 50;
+    let mut pos: i32 = 1;
+    let mut need_redraw = true;
     loop {
         match encoder.update().unwrap() {
             Direction::Clockwise => {
                 pos += 1;
                 info!("UP");
+                need_redraw = true;
             }
             Direction::CounterClockwise => {
                 pos -= 1;
                 info!("DOWN");
+                need_redraw = true;
             }
             Direction::None => {
                 info!("NOP");
             }
         }
 
-        buffer.clear();
-        if write!(&mut buffer, "Position {}", pos).is_ok() {
-            // Create a text at position (20, 30) and draw it using the previously defined style
-            Text::new(&buffer, Point::new(100, 100), norm_style)
+        if need_redraw {
+            buffer.clear();
+            if write!(&mut buffer, "Position {}", pos).is_ok() {
+                display.clear();
+                // Create a text at position (20, 30) and draw it using the previously defined style
+                Text::with_alignment(
+                    &buffer,
+                    display.bounding_box().center(),
+                    NORM_STYLE,
+                    embedded_graphics::text::Alignment::Center,
+                )
                 .draw(&mut display)
                 .unwrap();
-            if display.flush().is_err() {
-                error!("Display flush error");
+
+                if display.flush().is_err() {
+                    error!("Display flush error");
+                }
+            } else {
+                error!("Buffer overflow");
             }
-        } else {
-            error!("Buffer overflow");
+            need_redraw = false;
         }
 
         info!("Position {}", pos);
