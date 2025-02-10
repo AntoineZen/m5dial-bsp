@@ -37,7 +37,7 @@ fn main() -> ! {
     let mut board = m5dial::init(peripherals);
 
     // Show must go on !
-    board.display_bl.set_high();
+    board.set_backlight(true);
 
     const NORM_STYLE: MonoTextStyle<Rgb565> = MonoTextStyle::new(&THE_FONT, RgbColor::BLUE);
 

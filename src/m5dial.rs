@@ -93,3 +93,13 @@ pub fn init(peripherals: esp_hal::peripherals::Peripherals) -> M5Dial {
         encoder: encoder,
     }
 }
+
+impl M5Dial {
+    pub fn set_backlight(&mut self, state: bool) {
+        if state {
+            self.display_bl.set_high();
+        } else {
+            self.display_bl.set_low();
+        }
+    }
+}
