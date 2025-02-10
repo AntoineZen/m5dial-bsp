@@ -1034,7 +1034,7 @@ dependencies = [
 [[package]]
 name = "rotary-encoder-hal"
 version = "0.5.0"
-source = "git+https://github.com/tlhenvironment/rotary-encoder-hal.git#591a1b0d50f41c8ad48bec949ca01aced01d36e3"
+source = "git+https://github.com/leshow/rotary-encoder-hal.git?branch=remove_alpha#eea75d0f62971090e5bb1f365f7f6c51cec6659b"
 dependencies = [
  "either",
  "embedded-hal 1.0.0",
