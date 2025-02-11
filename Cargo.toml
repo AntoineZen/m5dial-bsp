@@ -20,7 +20,7 @@ esp-backtrace = { version = "0.15.0", features = [
 esp-hal = { version = "0.23.1", features = ["defmt", "esp32s3", "unstable"] }
 gc9a01-rs = "0.4.2"
 heapless = "0.8.0"
-rotary-encoder-hal = { git = "https://github.com/leshow/rotary-encoder-hal.git", branch = "remove_alpha" }
+rotary-encoder-hal = "0.6.0"
 
 
 [profile.dev]
