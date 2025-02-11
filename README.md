@@ -2,6 +2,16 @@
 
 This crates is a Board support package for the [M5 Dial](https://shop.m5stack.com/products/m5stack-dial-esp32-s3-smart-rotary-knob-w-1-28-round-touch-screen).
 
+Feature list/roadmap:
+
+ - [X] Screen driver (GC9A01)
+ - [X] Rotary encoder
+ - [ ] Touch-screen (FT3267)
+ - [ ] Buzzer
+ - [ ] Real-time clock (BM8563)
+ - [ ] Port A (I2C)
+ - [ ] Port B
+
 ## How to use
 
 First generate a base project using [esp-generate](https://github.com/esp-rs/esp-generate) or [esp-idf-template](https://github.com/esp-rs/esp-idf-template) as described in they respective documentations.
