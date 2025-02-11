@@ -1,3 +1,4 @@
+//! M5Dial Board Support Package
 use esp_hal::Blocking;
 use gc9a01::{mode::BufferedGraphics, prelude::*, Gc9a01, SPIDisplayInterface};
 // Screen driver
@@ -19,8 +20,9 @@ use rotary_encoder_hal::{DefaultPhase, Rotary};
 
 use defmt::error;
 
-pub struct M5Dial {
-    // Display driver
+/// Holds the board periferals
+pub struct M5DialBsp {
+    /// Display driver
     pub display: Gc9a01<
         SPIInterface<
             ExclusiveDevice<Spi<'static, Blocking>, Output<'static>, NoDelay>,
@@ -30,13 +32,16 @@ pub struct M5Dial {
         BufferedGraphics<DisplayResolution240x240>,
     >,
     // Backlite command
-    pub display_bl: Output<'static>,
+    display_bl: Output<'static>,
 
-    // Rottary encoder
+    /// Rottary encoder
     pub encoder: Rotary<Input<'static>, Input<'static>, DefaultPhase>,
 }
 
-pub fn init(peripherals: esp_hal::peripherals::Peripherals) -> M5Dial {
+/// Initialize board periferals from ESP32 peripherals.
+///
+/// This function initalize the peripherals provided by this BSP
+pub fn init(peripherals: esp_hal::peripherals::Peripherals) -> M5DialBsp {
     let mut delay = Delay::new();
 
     // Create SPI driver
@@ -87,14 +92,18 @@ pub fn init(peripherals: esp_hal::peripherals::Peripherals) -> M5Dial {
 
     let bl = Output::new(peripherals.GPIO9, Level::Low);
 
-    M5Dial {
+    M5DialBsp {
         display: display,
         display_bl: bl,
         encoder: encoder,
     }
 }
 
-impl M5Dial {
+impl M5DialBsp {
+    /// Screen backlight control
+    ///
+    /// # Arugments:
+    ///    - **state**: Set backlight ON if true, OFF if false
     pub fn set_backlight(&mut self, state: bool) {
         if state {
             self.display_bl.set_high();

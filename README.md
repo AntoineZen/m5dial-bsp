@@ -40,7 +40,7 @@ See [screen_counter.rs](examples/screen_counter.rs)
 
 ## License
 
-MIT license (LICENSE-MIT or http://opensource.org/licenses/MIT)
+MIT license (LICENSE-MIT or <http://opensource.org/licenses/MIT>)
 
 # Contriutions
 

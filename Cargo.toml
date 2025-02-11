@@ -1,8 +1,8 @@
 [package]
 edition = "2021"
-name = "m5dial-hal"
+name = "m5dial-bsp"
 version = "0.1.0"
-repository = "https://github.com/AntoineZen/m5dial-hal"
+repository = "https://github.com/AntoineZen/m5dial-bsp"
 license-file = "LICENSE"
 readme = "README.md"
 

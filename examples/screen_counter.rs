@@ -26,7 +26,7 @@ use core::fmt::Write;
 use defmt::{error, info};
 use {defmt_rtt as _, esp_backtrace as _};
 
-use m5dial_hal::m5dial;
+use m5dial_bsp::bsp;
 
 extern crate alloc;
 
@@ -36,7 +36,7 @@ fn main() -> ! {
     let config = esp_hal::Config::default().with_cpu_clock(CpuClock::max());
     let peripherals = esp_hal::init(config);
 
-    let mut board = m5dial::init(peripherals);
+    let mut board = bsp::init(peripherals);
 
     // Show must go on !
     board.set_backlight(true);
