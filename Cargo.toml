@@ -2,6 +2,9 @@
 edition = "2021"
 name = "m5dial-hal"
 version = "0.1.0"
+repository = "https://github.com/AntoineZen/m5dial-hal"
+license-file = "LICENSE"
+readme = "README.md"
 
 [dependencies]
 critical-section = "1.2.0"
