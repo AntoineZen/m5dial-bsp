@@ -846,6 +846,24 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "04cbf5b083de1c7e0222a7a51dbfdba1cbe1c6ab0b15e29fff3f6c077fd9cd9f"
 
 [[package]]
+name = "m5dial-hal"
+version = "0.1.0"
+dependencies = [
+ "critical-section",
+ "defmt",
+ "defmt-rtt",
+ "embedded-graphics",
+ "embedded-hal 1.0.0",
+ "embedded-hal-bus",
+ "esp-alloc",
+ "esp-backtrace",
+ "esp-hal",
+ "gc9a01-rs",
+ "heapless",
+ "rotary-encoder-hal",
+]
+
+[[package]]
 name = "memchr"
 version = "2.7.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1133,24 +1151,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "06794f8f6c5c898b3275aebefa6b8a1cb24cd2c6c79397ab15774837a0bc5755"
 dependencies = [
  "winapi-util",
-]
-
-[[package]]
-name = "test-m5-dial"
-version = "0.1.0"
-dependencies = [
- "critical-section",
- "defmt",
- "defmt-rtt",
- "embedded-graphics",
- "embedded-hal 1.0.0",
- "embedded-hal-bus",
- "esp-alloc",
- "esp-backtrace",
- "esp-hal",
- "gc9a01-rs",
- "heapless",
- "rotary-encoder-hal",
 ]
 
 [[package]]

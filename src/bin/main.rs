@@ -18,13 +18,15 @@ use embedded_graphics::{
 use rotary_encoder_hal::Direction;
 
 // heap-less string buffer
+
 use heapless::String;
-use test_m5_dial::m5dial;
 
 // Logging stuff
 use core::fmt::Write;
 use defmt::{error, info};
 use {defmt_rtt as _, esp_backtrace as _};
+
+use m5dial_hal::m5dial;
 
 extern crate alloc;
 

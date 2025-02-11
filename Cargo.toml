@@ -1,6 +1,6 @@
 [package]
 edition = "2021"
-name = "test-m5-dial"
+name = "m5dial-hal"
 version = "0.1.0"
 
 [[bin]]
