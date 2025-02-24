@@ -40,6 +40,12 @@ pub struct M5DialBsp {
     /// HOLD signal, must be set HIGH after startup to maintain power. Can be set LOW to power off.
     /// Note that this signal does not work on USB power
     hold: Output<'static>,
+
+    /// WAKE signal. Get LOW on button push. Also temporary activate the +5V and +3.3V DC/DCs.
+    wake: Input<'static>,
+
+    /// State of wake last time it was pooled.
+    last_wake_state: bool,
 }
 
 /// Initialize board periferals from ESP32 peripherals.
@@ -98,18 +104,23 @@ pub fn init(peripherals: esp_hal::peripherals::Peripherals) -> M5DialBsp {
 
     let hold = Output::new(peripherals.GPIO46, Level::High);
 
+    let wake = Input::new(peripherals.GPIO42, Pull::None);
+    let wake_state = wake.is_low();
+
     M5DialBsp {
         display: display,
         display_bl: bl,
         encoder: encoder,
         hold: hold,
+        wake: wake,
+        last_wake_state: wake_state,
     }
 }
 
 impl M5DialBsp {
     /// Screen backlight control
     ///
-    /// # Arugments:
+    /// ## Arugments:
     ///    - **state**: Set backlight ON if true, OFF if false
     pub fn set_backlight(&mut self, state: bool) {
         if state {
@@ -129,5 +140,26 @@ impl M5DialBsp {
     /// **NOTE:** Untested
     pub fn shutdown(&mut self) {
         self.hold.set_low();
+    }
+
+    /// Query current button state
+    pub fn is_button_pushed(&mut self) -> bool {
+        self.last_wake_state = self.wake.is_low();
+        self.last_wake_state
+    }
+
+    /// Query if button state has changed since last call.
+    ///
+    /// ## Returns
+    ///  - Some(current state) if button state has changed.
+    ///  - None if button state has not changed.
+    pub fn has_button_changed(&mut self) -> Option<bool> {
+        let current_state = self.wake.is_low();
+        if current_state != self.last_wake_state {
+            self.last_wake_state = current_state;
+            Some(current_state)
+        } else {
+            None
+        }
     }
 }

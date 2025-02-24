@@ -6,6 +6,8 @@ Feature list/roadmap:
 
  - [X] Screen driver (GC9A01)
  - [X] Rotary encoder
+ - [X] Button
+ - [X] Power management (Shutdown)
  - [ ] Touch-screen (FT3267)
  - [ ] Buzzer
  - [ ] Real-time clock (BM8563)

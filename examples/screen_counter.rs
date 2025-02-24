@@ -41,7 +41,17 @@ fn main() -> ! {
     // Show must go on !
     board.set_backlight(true);
 
-    const NORM_STYLE: MonoTextStyle<Rgb565> = MonoTextStyle::new(&THE_FONT, RgbColor::BLUE);
+    const STYLE_LIST: [MonoTextStyle<Rgb565>; 7] = [
+        MonoTextStyle::new(&THE_FONT, RgbColor::BLUE),
+        MonoTextStyle::new(&THE_FONT, RgbColor::RED),
+        MonoTextStyle::new(&THE_FONT, RgbColor::GREEN),
+        MonoTextStyle::new(&THE_FONT, RgbColor::CYAN),
+        MonoTextStyle::new(&THE_FONT, RgbColor::YELLOW),
+        MonoTextStyle::new(&THE_FONT, RgbColor::MAGENTA),
+        MonoTextStyle::new(&THE_FONT, RgbColor::WHITE),
+    ];
+
+    let mut style_index: usize = 0;
 
     let mut buffer: String<64> = String::new();
 
@@ -52,6 +62,14 @@ fn main() -> ! {
     let mut pos: i32 = 1;
     let mut need_redraw = true;
     loop {
+        // Change Test color on button push
+        if let Some(state) = board.has_button_changed() {
+            if state == false {
+                style_index = (style_index + 1) % STYLE_LIST.len();
+                need_redraw = true;
+            }
+        }
+
         match board.encoder.update().unwrap() {
             Direction::Clockwise => {
                 pos += 1;
@@ -72,7 +90,7 @@ fn main() -> ! {
                 Text::with_alignment(
                     &buffer,
                     board.display.bounding_box().center(),
-                    NORM_STYLE,
+                    STYLE_LIST[style_index],
                     embedded_graphics::text::Alignment::Center,
                 )
                 .draw(&mut board.display)
