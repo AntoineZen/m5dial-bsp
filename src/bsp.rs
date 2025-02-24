@@ -36,6 +36,10 @@ pub struct M5DialBsp {
 
     /// Rottary encoder
     pub encoder: Rotary<Input<'static>, Input<'static>, DefaultPhase>,
+
+    /// HOLD signal, must be set HIGH after startup to maintain power. Can be set LOW to power off.
+    /// Note that this signal does not work on USB power
+    hold: Output<'static>,
 }
 
 /// Initialize board periferals from ESP32 peripherals.
@@ -92,10 +96,13 @@ pub fn init(peripherals: esp_hal::peripherals::Peripherals) -> M5DialBsp {
 
     let bl = Output::new(peripherals.GPIO9, Level::Low);
 
+    let hold = Output::new(peripherals.GPIO46, Level::High);
+
     M5DialBsp {
         display: display,
         display_bl: bl,
         encoder: encoder,
+        hold: hold,
     }
 }
 
@@ -110,5 +117,17 @@ impl M5DialBsp {
         } else {
             self.display_bl.set_low();
         }
+    }
+
+    /// Shutdown the board.
+    ///
+    /// This method shut-down the board by setting the pin G46 / signal HOLD low.
+    /// This has no effect when powered by USB. It only works when the board is powered using the green screw terinal (P5 on schematics).
+    ///
+    /// **NOTE:** The pin signal is set high as start by the [init()](init) function.
+    ///
+    /// **NOTE:** Untested
+    pub fn shutdown(&mut self) {
+        self.hold.set_low();
     }
 }
