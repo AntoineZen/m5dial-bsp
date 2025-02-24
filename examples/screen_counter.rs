@@ -47,23 +47,21 @@ fn main() -> ! {
 
     esp_alloc::heap_allocator!(72 * 1024);
 
+    info!("On screen counter demo running!");
+
     let mut pos: i32 = 1;
     let mut need_redraw = true;
     loop {
         match board.encoder.update().unwrap() {
             Direction::Clockwise => {
                 pos += 1;
-                info!("UP");
                 need_redraw = true;
             }
             Direction::CounterClockwise => {
                 pos -= 1;
-                info!("DOWN");
                 need_redraw = true;
             }
-            Direction::None => {
-                info!("NOP");
-            }
+            Direction::None => {}
         }
 
         if need_redraw {
@@ -89,10 +87,6 @@ fn main() -> ! {
             need_redraw = false;
         }
 
-        info!("Position {}", pos);
-
-        //delay.delay_millis(50);
+        //info!("Position {}", pos);
     }
-
-    // for inspiration have a look at the examples at https://github.com/esp-rs/esp-hal/tree/v0.23.1/examples/src/bin
 }
