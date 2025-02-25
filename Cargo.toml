@@ -1,9 +1,10 @@
 [package]
 edition = "2021"
 name = "m5dial-bsp"
-version = "0.2.0"
+version = "0.2.1"
 homepage = "https://github.com/AntoineZen/m5dial-bsp"
 repository = "https://github.com/AntoineZen/m5dial-bsp"
+documentation = "https://antoinezen.github.io/m5dial-bsp"
 description = "Board support package for the M5 Dial."
 license-file = "LICENSE"
 readme = "README.md"
