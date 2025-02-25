@@ -1,0 +1,50 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="M5 Dial Board Support Package (BSP)"><title>m5dial_bsp - Rust</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../static.files/rustdoc-42caa33d.css"><meta name="rustdoc-vars" data-root-path="../" data-static-root-path="../static.files/" data-current-crate="m5dial_bsp" data-themes="" data-resource-suffix="" data-rustdoc-version="1.84.0-nightly (b0bd11bcc 2025-01-10) (1.84.0.0)" data-channel="nightly" data-search-js="search-92e6798f.js" data-settings-js="settings-0f613d39.js" ><script src="../static.files/storage-59e33391.js"></script><script defer src="../crates.js"></script><script defer src="../static.files/main-5f194d8c.js"></script><noscript><link rel="stylesheet" href="../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../static.files/favicon-044be391.svg"></head><body class="rustdoc mod crate"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle" title="show sidebar"></button></nav><nav class="sidebar"><div class="sidebar-crate"><h2><a href="../m5dial_bsp/index.html">m5dial_<wbr>bsp</a><span class="version">0.2.0</span></h2></div><div class="sidebar-elems"><ul class="block"><li><a id="all-types" href="all.html">All Items</a></li></ul><section id="rustdoc-toc"><h3><a href="#">Sections</a></h3><ul class="block top-toc"><li><a href="#m5-dial-board-support-package-bsp" title="M5 Dial Board Support Package (BSP)">M5 Dial Board Support Package (BSP)</a><ul><li><a href="#how-to-use" title="How to use">How to use</a></li><li><a href="#examples" title="Examples">Examples</a></li><li><a href="#license" title="License">License</a></li></ul></li><li><a href="#contriutions" title="Contriutions">Contriutions</a></li><li><a href="#credit" title="Credit">Credit</a></li></ul><h3><a href="#reexports">Crate Items</a></h3><ul class="block"><li><a href="#reexports" title="Re-exports">Re-exports</a></li><li><a href="#modules" title="Modules">Modules</a></li></ul></section><div id="rustdoc-modnav"></div></div></nav><div class="sidebar-resizer"></div><main><div class="width-limiter"><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1>Crate <span>m5dial_bsp</span><button id="copy-path" title="Copy item path to clipboard">Copy item path</button></h1><rustdoc-toolbar></rustdoc-toolbar><span class="sub-heading"><a class="src" href="../src/m5dial_bsp/lib.rs.html#1-7">Source</a> </span></div><details class="toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><h2 id="m5-dial-board-support-package-bsp"><a class="doc-anchor" href="#m5-dial-board-support-package-bsp">§</a>M5 Dial Board Support Package (BSP)</h2>
+<p>This crates is a Board support package for the <a href="https://shop.m5stack.com/products/m5stack-dial-esp32-s3-smart-rotary-knob-w-1-28-round-touch-screen">M5 Dial</a>.</p>
+<p>Feature list/roadmap:</p>
+<ul>
+<li><input disabled="" type="checkbox" checked=""/>
+Screen driver (GC9A01)</li>
+<li><input disabled="" type="checkbox" checked=""/>
+Rotary encoder</li>
+<li><input disabled="" type="checkbox" checked=""/>
+Button</li>
+<li><input disabled="" type="checkbox" checked=""/>
+Power management (Shutdown)</li>
+<li><input disabled="" type="checkbox"/>
+Touch-screen (FT3267)</li>
+<li><input disabled="" type="checkbox"/>
+Buzzer</li>
+<li><input disabled="" type="checkbox"/>
+Real-time clock (BM8563)</li>
+<li><input disabled="" type="checkbox"/>
+Port A (I2C)</li>
+<li><input disabled="" type="checkbox"/>
+Port B</li>
+</ul>
+<h3 id="how-to-use"><a class="doc-anchor" href="#how-to-use">§</a>How to use</h3>
+<p>First generate a base project using <a href="https://github.com/esp-rs/esp-generate">esp-generate</a> or <a href="https://github.com/esp-rs/esp-idf-template">esp-idf-template</a> as described in they respective documentations.
+Then, add this crate to your <code>Cargo.toml</code>:</p>
+<div class="example-wrap"><pre class="language-toml"><code>[dependencies]
+...
+rotary-encoder-hal = &quot;0.6.0&quot;
+...</code></pre></div>
+<p>In your main function then initialize this hall and use it:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">let </span>config = esp_hal::Config::default().with_cpu_clock(CpuClock::max());
+<span class="kw">let </span>peripherals = esp_hal::init(config);
+
+<span class="kw">let </span><span class="kw-2">mut </span>board = m5dial::init(peripherals);
+...</code></pre></div>
+<h3 id="examples"><a class="doc-anchor" href="#examples">§</a>Examples</h3>
+<p>See <a href="examples/screen_counter.rs">screen_counter.rs</a></p>
+<h3 id="license"><a class="doc-anchor" href="#license">§</a>License</h3>
+<p>MIT license (LICENSE-MIT or <a href="http://opensource.org/licenses/MIT">http://opensource.org/licenses/MIT</a>)</p>
+<h2 id="contriutions"><a class="doc-anchor" href="#contriutions">§</a>Contriutions</h2>
+<p>… are welcome !</p>
+<h2 id="credit"><a class="doc-anchor" href="#credit">§</a>Credit</h2>
+<p>This crates rely on many crates of the <a href="https://github.com/rust-embedded/wg">embedded Rust working group</a>, <a href="https://github.com/esp-rs">ESP support crates</a> from Expressif, <a href="https://github.com/embedded-graphics">embedded-graphics</a> and device drivers such as :</p>
+<ul>
+<li><a href="https://crates.io/crates/rotary-encoder-hal">rotary-encoder-hal</a></li>
+<li><a href="https://crates.io/crates/gc9a01-rs">gc9c01 display driver</a></li>
+</ul>
+</div></details><h2 id="reexports" class="section-header">Re-exports<a href="#reexports" class="anchor">§</a></h2><ul class="item-table"><li><div class="item-name" id="reexport.init"><code>pub use bsp::<a class="fn" href="bsp/fn.init.html" title="fn m5dial_bsp::bsp::init">init</a>;</code></div></li><li><div class="item-name" id="reexport.M5DialBsp"><code>pub use bsp::<a class="struct" href="bsp/struct.M5DialBsp.html" title="struct m5dial_bsp::bsp::M5DialBsp">M5DialBsp</a>;</code></div></li></ul><h2 id="modules" class="section-header">Modules<a href="#modules" class="anchor">§</a></h2><ul class="item-table"><li><div class="item-name"><a class="mod" href="bsp/index.html" title="mod m5dial_bsp::bsp">bsp</a></div><div class="desc docblock-short">M5Dial Board Support Package</div></li></ul></section></div></main></body></html>
