@@ -2,6 +2,8 @@
 
 This crates is a Board support package for the [M5 Dial](https://shop.m5stack.com/products/m5stack-dial-esp32-s3-smart-rotary-knob-w-1-28-round-touch-screen).
 
+### [API Documenation](https://antoinezen.github.io/m5dial-bsp)
+
 Feature list/roadmap:
 
  - [X] Screen driver (GC9A01)
@@ -21,9 +23,9 @@ Then, add this crate to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-...
+....
 rotary-encoder-hal = "0.6.0"
-...
+....
 ```
 
 In your main function then initialize this hall and use it:
@@ -33,8 +35,10 @@ let config = esp_hal::Config::default().with_cpu_clock(CpuClock::max());
 let peripherals = esp_hal::init(config);
 
 let mut board = m5dial::init(peripherals);
-...
+....
 ```
+
+For more information, please refer to the [API Documenation](https://antoinezen.github.io/m5dial-bsp).
 
 ## Examples
 
@@ -42,7 +46,7 @@ See [screen_counter.rs](examples/screen_counter.rs)
 
 ## License
 
-MIT license (LICENSE-MIT or <http://opensource.org/licenses/MIT>)
+MIT license ([LICENSE](LICENSE) or <http://opensource.org/licenses/MIT>)
 
 # Contriutions
 
