@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":["bsp"]};
+window.SIDEBAR_ITEMS = {"mod":["bsp","ft3267"]};

@@ -163,7 +163,48 @@
 <a href="#162" id="162">162</a>
 <a href="#163" id="163">163</a>
 <a href="#164" id="164">164</a>
-<a href="#165" id="165">165</a></pre></div><pre class="rust"><code><span class="doccomment">//! M5Dial Board Support Package
+<a href="#165" id="165">165</a>
+<a href="#166" id="166">166</a>
+<a href="#167" id="167">167</a>
+<a href="#168" id="168">168</a>
+<a href="#169" id="169">169</a>
+<a href="#170" id="170">170</a>
+<a href="#171" id="171">171</a>
+<a href="#172" id="172">172</a>
+<a href="#173" id="173">173</a>
+<a href="#174" id="174">174</a>
+<a href="#175" id="175">175</a>
+<a href="#176" id="176">176</a>
+<a href="#177" id="177">177</a>
+<a href="#178" id="178">178</a>
+<a href="#179" id="179">179</a>
+<a href="#180" id="180">180</a>
+<a href="#181" id="181">181</a>
+<a href="#182" id="182">182</a>
+<a href="#183" id="183">183</a>
+<a href="#184" id="184">184</a>
+<a href="#185" id="185">185</a>
+<a href="#186" id="186">186</a>
+<a href="#187" id="187">187</a>
+<a href="#188" id="188">188</a>
+<a href="#189" id="189">189</a>
+<a href="#190" id="190">190</a>
+<a href="#191" id="191">191</a>
+<a href="#192" id="192">192</a>
+<a href="#193" id="193">193</a>
+<a href="#194" id="194">194</a>
+<a href="#195" id="195">195</a>
+<a href="#196" id="196">196</a>
+<a href="#197" id="197">197</a>
+<a href="#198" id="198">198</a>
+<a href="#199" id="199">199</a>
+<a href="#200" id="200">200</a>
+<a href="#201" id="201">201</a>
+<a href="#202" id="202">202</a>
+<a href="#203" id="203">203</a>
+<a href="#204" id="204">204</a>
+<a href="#205" id="205">205</a>
+<a href="#206" id="206">206</a></pre></div><pre class="rust"><code><span class="doccomment">//! M5Dial Board Support Package
 </span><span class="kw">use </span>esp_hal::Blocking;
 <span class="kw">use </span>gc9a01::{mode::BufferedGraphics, prelude::<span class="kw-2">*</span>, Gc9a01, SPIDisplayInterface};
 <span class="comment">// Screen driver
@@ -172,10 +213,12 @@
 </span><span class="kw">use </span>esp_hal::delay::Delay;
 <span class="kw">use </span>esp_hal::gpio::{Input, Level, Output, Pull};
 <span class="kw">use </span>esp_hal::spi::{
-    master::{Config, Spi},
+    master::{Config <span class="kw">as </span>SpiConfig, Spi},
     Mode,
 };
 <span class="kw">use </span>esp_hal::time::RateExtU32;
+
+<span class="kw">use </span>esp_hal::i2c::master::{Config <span class="kw">as </span>I2cConfig, I2c <span class="kw">as </span>EspI2C};
 
 <span class="comment">// Generic hardware abstraction
 </span><span class="kw">use </span>embedded_hal_bus::spi::{ExclusiveDevice, NoDelay};
@@ -185,17 +228,24 @@
 
 <span class="kw">use </span>defmt::error;
 
+<span class="kw">use </span><span class="kw">crate</span>::ft3267::{Ft3267, TouchPoint};
+
+<span class="kw">pub type </span>M5DialDisplay = Gc9a01&lt;
+    SPIInterface&lt;
+        ExclusiveDevice&lt;Spi&lt;<span class="lifetime">'static</span>, Blocking&gt;, Output&lt;<span class="lifetime">'static</span>&gt;, NoDelay&gt;,
+        Output&lt;<span class="lifetime">'static</span>&gt;,
+    &gt;,
+    DisplayResolution240x240,
+    BufferedGraphics&lt;DisplayResolution240x240&gt;,
+&gt;;
+
 <span class="doccomment">/// Holds the board periferals
 </span><span class="kw">pub struct </span>M5DialBsp {
     <span class="doccomment">/// Display driver
-    </span><span class="kw">pub </span>display: Gc9a01&lt;
-        SPIInterface&lt;
-            ExclusiveDevice&lt;Spi&lt;<span class="lifetime">'static</span>, Blocking&gt;, Output&lt;<span class="lifetime">'static</span>&gt;, NoDelay&gt;,
-            Output&lt;<span class="lifetime">'static</span>&gt;,
-        &gt;,
-        DisplayResolution240x240,
-        BufferedGraphics&lt;DisplayResolution240x240&gt;,
-    &gt;,
+    </span><span class="kw">pub </span>display: M5DialDisplay,
+
+    <span class="comment">// Touch screen controller
+    </span>touch: Ft3267,
     <span class="comment">// Backlite command
     </span>display_bl: Output&lt;<span class="lifetime">'static</span>&gt;,
 
@@ -211,6 +261,9 @@
 
     <span class="doccomment">/// State of wake last time it was pooled.
     </span>last_wake_state: bool,
+
+    <span class="comment">// Board I2C bus
+    </span>tp_i2c: EspI2C&lt;<span class="lifetime">'static</span>, Blocking&gt;,
 }
 
 <span class="doccomment">/// Initialize board periferals from ESP32 peripherals.
@@ -222,7 +275,7 @@
     <span class="comment">// Create SPI driver
     </span><span class="kw">let </span>spi = Spi::new(
         peripherals.SPI2,
-        Config::default()
+        SpiConfig::default()
             .with_frequency(<span class="number">50</span>.MHz())
             .with_mode(Mode::_0),
     )
@@ -272,13 +325,24 @@
     <span class="kw">let </span>wake = Input::new(peripherals.GPIO42, Pull::None);
     <span class="kw">let </span>wake_state = wake.is_low();
 
+    <span class="kw">let </span><span class="kw-2">mut </span>tp_i2c = EspI2C::new(peripherals.I2C0, I2cConfig::default())
+        .unwrap()
+        .with_sda(peripherals.GPIO11)
+        .with_scl(peripherals.GPIO12);
+
+    <span class="kw">let </span>touch = Ft3267::new(<span class="number">0</span>);
+
+    touch.init(<span class="kw-2">&amp;mut </span>tp_i2c);
+
     M5DialBsp {
-        display: display,
+        display,
+        touch,
         display_bl: bl,
-        encoder: encoder,
-        hold: hold,
-        wake: wake,
+        encoder,
+        hold,
+        wake,
         last_wake_state: wake_state,
+        tp_i2c,
     }
 }
 
@@ -326,6 +390,24 @@
         } <span class="kw">else </span>{
             <span class="prelude-val">None
         </span>}
+    }
+
+    <span class="doccomment">/// Query if the touch screen is touched. If touch screen
+    /// is un-touched, return None. Return Some() with detected
+    /// finger count if touched (supports multi-touch).
+    </span><span class="kw">pub fn </span>touch_count(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;u8&gt; {
+        <span class="kw">let </span>touch_count = <span class="self">self</span>.touch.pool(<span class="kw-2">&amp;mut </span><span class="self">self</span>.tp_i2c);
+
+        <span class="kw">if </span>touch_count &gt; <span class="number">0 </span>{
+            <span class="prelude-val">Some</span>(touch_count)
+        } <span class="kw">else </span>{
+            <span class="prelude-val">None
+        </span>}
+    }
+
+    <span class="doccomment">/// Get Finger position for finger 'n'.
+    </span><span class="kw">pub fn </span>touch_position(<span class="kw-2">&amp;mut </span><span class="self">self</span>, n: u8) -&gt; TouchPoint {
+        <span class="self">self</span>.touch.get_point(<span class="kw-2">&amp;mut </span><span class="self">self</span>.tp_i2c, n)
     }
 }
 </code></pre></div></section></main></body></html>

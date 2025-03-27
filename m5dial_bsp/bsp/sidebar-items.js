@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["init"],"struct":["M5DialBsp"]};
+window.SIDEBAR_ITEMS = {"fn":["init"],"struct":["M5DialBsp"],"type":["M5DialDisplay"]};

@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["Ft3265Gesture"],"struct":["Ft3267","TouchPoint"]};
