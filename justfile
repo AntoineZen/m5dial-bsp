@@ -11,5 +11,10 @@ publish-doc:
     git add -u
 
 # Run screen_counter example.
-run:
+run-counter:
     cargo run --release --example screen_counter
+
+
+# Run touch screen example.
+run-touch:
+    cargo run --release --example touch

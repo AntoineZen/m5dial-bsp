@@ -18,11 +18,13 @@ pub enum Ft3265Gesture {
     Ft3267GestureZomeOut = 0x49,
 }
 
+#[derive(Debug)]
 pub struct Ft3267 {
     address: u8,
     roatation: u8,
 }
 
+#[derive(Debug)]
 pub struct TouchPoint {
     pub id: u8,
     pub x: u16,

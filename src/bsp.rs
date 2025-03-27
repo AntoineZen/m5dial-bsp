@@ -7,10 +7,12 @@ use gc9a01::{mode::BufferedGraphics, prelude::*, Gc9a01, SPIDisplayInterface};
 use esp_hal::delay::Delay;
 use esp_hal::gpio::{Input, Level, Output, Pull};
 use esp_hal::spi::{
-    master::{Config, Spi},
+    master::{Config as SpiConfig, Spi},
     Mode,
 };
 use esp_hal::time::RateExtU32;
+
+use esp_hal::i2c::master::{Config as I2cConfig, I2c as EspI2C};
 
 // Generic hardware abstraction
 use embedded_hal_bus::spi::{ExclusiveDevice, NoDelay};
@@ -20,17 +22,24 @@ use rotary_encoder_hal::{DefaultPhase, Rotary};
 
 use defmt::error;
 
+use crate::ft3267::{Ft3267, TouchPoint};
+
+pub type M5DialDisplay = Gc9a01<
+    SPIInterface<
+        ExclusiveDevice<Spi<'static, Blocking>, Output<'static>, NoDelay>,
+        Output<'static>,
+    >,
+    DisplayResolution240x240,
+    BufferedGraphics<DisplayResolution240x240>,
+>;
+
 /// Holds the board periferals
 pub struct M5DialBsp {
     /// Display driver
-    pub display: Gc9a01<
-        SPIInterface<
-            ExclusiveDevice<Spi<'static, Blocking>, Output<'static>, NoDelay>,
-            Output<'static>,
-        >,
-        DisplayResolution240x240,
-        BufferedGraphics<DisplayResolution240x240>,
-    >,
+    pub display: M5DialDisplay,
+
+    // Touch screen controller
+    touch: Ft3267,
     // Backlite command
     display_bl: Output<'static>,
 
@@ -46,6 +55,9 @@ pub struct M5DialBsp {
 
     /// State of wake last time it was pooled.
     last_wake_state: bool,
+
+    // Board I2C bus
+    tp_i2c: EspI2C<'static, Blocking>,
 }
 
 /// Initialize board periferals from ESP32 peripherals.
@@ -57,7 +69,7 @@ pub fn init(peripherals: esp_hal::peripherals::Peripherals) -> M5DialBsp {
     // Create SPI driver
     let spi = Spi::new(
         peripherals.SPI2,
-        Config::default()
+        SpiConfig::default()
             .with_frequency(50.MHz())
             .with_mode(Mode::_0),
     )
@@ -107,13 +119,24 @@ pub fn init(peripherals: esp_hal::peripherals::Peripherals) -> M5DialBsp {
     let wake = Input::new(peripherals.GPIO42, Pull::None);
     let wake_state = wake.is_low();
 
+    let mut tp_i2c = EspI2C::new(peripherals.I2C0, I2cConfig::default())
+        .unwrap()
+        .with_sda(peripherals.GPIO11)
+        .with_scl(peripherals.GPIO12);
+
+    let touch = Ft3267::new(0);
+
+    touch.init(&mut tp_i2c);
+
     M5DialBsp {
-        display: display,
+        display,
+        touch,
         display_bl: bl,
-        encoder: encoder,
-        hold: hold,
-        wake: wake,
+        encoder,
+        hold,
+        wake,
         last_wake_state: wake_state,
+        tp_i2c,
     }
 }
 
@@ -161,5 +184,23 @@ impl M5DialBsp {
         } else {
             None
         }
+    }
+
+    /// Query if the touch screen is touched. If touch screen
+    /// is un-touched, return None. Return Some() with detected
+    /// finger count if touched (supports multi-touch).
+    pub fn touch_count(&mut self) -> Option<u8> {
+        let touch_count = self.touch.pool(&mut self.tp_i2c);
+
+        if touch_count > 0 {
+            Some(touch_count)
+        } else {
+            None
+        }
+    }
+
+    /// Get Finger position for finger 'n'.
+    pub fn touch_position(&mut self, n: u8) -> TouchPoint {
+        self.touch.get_point(&mut self.tp_i2c, n)
     }
 }

@@ -10,7 +10,7 @@ Feature list/roadmap:
  - [X] Rotary encoder
  - [X] Button
  - [X] Power management (Shutdown)
- - [ ] Touch-screen (FT3267)
+ - [X] Touch-screen (FT3267)
  - [ ] Buzzer
  - [ ] Real-time clock (BM8563)
  - [ ] Port A (I2C)

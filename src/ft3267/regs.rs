@@ -1,7 +1,7 @@
+//! FT3267 register map and function codes
+
 pub const FT3267_SLAVE_ADDRESS: u8 = 0x38;
 pub const FT3267_ADDR: u8 = 0x38;
-
-/** @brief FT3267 register map and function codes */
 
 pub const FT3267_DEVICE_MODE: u8 = 0x00;
 pub const FT3267_GESTURE_ID: u8 = 0x01;

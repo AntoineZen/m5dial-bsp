@@ -23,7 +23,7 @@ use heapless::String;
 
 // Logging stuff
 use core::fmt::Write;
-use defmt::{error, info};
+use defmt::{debug, error, info};
 use {defmt_rtt as _, esp_backtrace as _};
 
 use m5dial_bsp::bsp;

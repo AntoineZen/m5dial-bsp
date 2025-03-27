@@ -3,5 +3,7 @@
 
 pub mod bsp;
 
+pub mod ft3267;
+
 pub use bsp::init;
 pub use bsp::M5DialBsp;
