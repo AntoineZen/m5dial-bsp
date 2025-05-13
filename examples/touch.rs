@@ -73,7 +73,7 @@ fn main() -> ! {
 
         if need_redraw {
             board.display.clear();
-            // Create the sycle with the given color
+            // Create the cycle with the given color
             let style = PrimitiveStyleBuilder::new()
                 .stroke_color(COLOR_LIST[style_index])
                 .stroke_width(3)

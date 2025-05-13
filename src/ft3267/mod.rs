@@ -21,7 +21,7 @@ pub enum Ft3265Gesture {
 #[derive(Debug)]
 pub struct Ft3267 {
     address: u8,
-    roatation: u8,
+    rotation: u8,
 }
 
 #[derive(Debug)]
@@ -49,7 +49,7 @@ impl Ft3267 {
     pub fn new(rotation: u8) -> Self {
         Ft3267 {
             address: regs::FT3267_ADDR,
-            roatation: rotation,
+            rotation: rotation,
         }
     }
 
@@ -111,7 +111,7 @@ impl Ft3267 {
         let x = (((buf[0] & 0x0f) as u16) << 8) + buf[1] as u16;
         let y = (((buf[2] & 0x0f) as u16) << 8) + buf[3] as u16;
 
-        if self.roatation == 0 {
+        if self.rotation == 0 {
             TouchPoint { id: n, x, y }
         } else {
             TouchPoint { id: n, x: y, y: x }

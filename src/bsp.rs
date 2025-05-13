@@ -62,7 +62,7 @@ pub struct M5DialBsp {
 
 /// Initialize board periferals from ESP32 peripherals.
 ///
-/// This function initalize the peripherals provided by this BSP
+/// This function initialize the peripherals provided by this BSP
 pub fn init(peripherals: esp_hal::peripherals::Peripherals) -> M5DialBsp {
     let mut delay = Delay::new();
 
@@ -143,7 +143,7 @@ pub fn init(peripherals: esp_hal::peripherals::Peripherals) -> M5DialBsp {
 impl M5DialBsp {
     /// Screen backlight control
     ///
-    /// ## Arugments:
+    /// ## Arguments:
     ///    - **state**: Set backlight ON if true, OFF if false
     pub fn set_backlight(&mut self, state: bool) {
         if state {

@@ -2,7 +2,7 @@
 
 This crates is a Board support package for the [M5 Dial](https://shop.m5stack.com/products/m5stack-dial-esp32-s3-smart-rotary-knob-w-1-28-round-touch-screen).
 
-### [API Documenation](https://antoinezen.github.io/m5dial-bsp)
+### [API Documentation](https://antoinezen.github.io/m5dial-bsp)
 
 Feature list/roadmap:
 
@@ -38,7 +38,7 @@ let mut board = m5dial::init(peripherals);
 ....
 ```
 
-For more information, please refer to the [API Documenation](https://antoinezen.github.io/m5dial-bsp).
+For more information, please refer to the [API Documentation](https://antoinezen.github.io/m5dial-bsp).
 
 ## Examples
 
