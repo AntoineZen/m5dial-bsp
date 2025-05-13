@@ -42,13 +42,16 @@ For more information, please refer to the [API Documentation](https://antoinezen
 
 ## Examples
 
-See [screen_counter.rs](examples/screen_counter.rs)
+See :
+
+ - [screen_counter.rs](examples/screen_counter.rs)
+ - [touch.rs](examples/touch.rs)
 
 ## License
 
 MIT license ([LICENSE](LICENSE) or <http://opensource.org/licenses/MIT>)
 
-# Contriutions
+# Contributions
 
 ... are welcome !
 
