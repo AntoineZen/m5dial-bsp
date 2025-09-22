@@ -12,9 +12,9 @@ publish-doc:
 
 # Run screen_counter example.
 run-counter:
-    cargo run --release --example screen_counter
+    cargo run --example screen_counter
 
 
 # Run touch screen example.
 run-touch:
-    cargo run --release --example touch
+    cargo run --example touch

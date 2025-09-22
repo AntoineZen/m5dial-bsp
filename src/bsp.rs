@@ -1,18 +1,20 @@
 //! M5Dial Board Support Package
-use esp_hal::Blocking;
 use gc9a01::{mode::BufferedGraphics, prelude::*, Gc9a01, SPIDisplayInterface};
 // Screen driver
 
 // ESP32 Hardware abstraction
-use esp_hal::delay::Delay;
-use esp_hal::gpio::{Input, Level, Output, Pull};
-use esp_hal::spi::{
-    master::{Config as SpiConfig, Spi},
-    Mode,
+use esp_hal::{
+    delay::Delay,
+    gpio::{Input, Level, Output, Pull},
+    i2c::master::{Config as I2cConfig, I2c as EspI2C},
+    ledc::Ledc,
+    spi::{
+        master::{Config as SpiConfig, Spi},
+        Mode,
+    },
+    time::RateExtU32,
+    Blocking,
 };
-use esp_hal::time::RateExtU32;
-
-use esp_hal::i2c::master::{Config as I2cConfig, I2c as EspI2C};
 
 // Generic hardware abstraction
 use embedded_hal_bus::spi::{ExclusiveDevice, NoDelay};
@@ -23,6 +25,8 @@ use rotary_encoder_hal::{DefaultPhase, Rotary};
 use defmt::error;
 
 use crate::ft3267::{Ft3267, TouchPoint};
+
+use crate::buzzer::Buzzer;
 
 pub type M5DialDisplay = Gc9a01<
     SPIInterface<
@@ -58,6 +62,9 @@ pub struct M5DialBsp {
 
     // Board I2C bus
     tp_i2c: EspI2C<'static, Blocking>,
+
+    /// Buzzer controller
+    pub buzzer: Buzzer,
 }
 
 /// Initialize board periferals from ESP32 peripherals.
@@ -128,6 +135,11 @@ pub fn init(peripherals: esp_hal::peripherals::Peripherals) -> M5DialBsp {
 
     touch.init(&mut tp_i2c);
 
+    let buz = Buzzer::new(
+        Ledc::new(peripherals.LEDC),
+        Output::new(peripherals.GPIO3, Level::Low),
+    );
+
     M5DialBsp {
         display,
         touch,
@@ -137,6 +149,7 @@ pub fn init(peripherals: esp_hal::peripherals::Peripherals) -> M5DialBsp {
         wake,
         last_wake_state: wake_state,
         tp_i2c,
+        buzzer: buz,
     }
 }
 

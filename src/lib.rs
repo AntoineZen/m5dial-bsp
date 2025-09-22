@@ -3,6 +3,7 @@
 
 pub mod bsp;
 
+pub mod buzzer;
 pub mod ft3267;
 
 pub use bsp::init;

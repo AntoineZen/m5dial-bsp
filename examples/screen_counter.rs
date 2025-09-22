@@ -1,9 +1,10 @@
 #![no_std]
 #![no_main]
 
+use embedded_hal::delay::DelayNs;
 // ESP32 Hardware abstraction
-use esp_hal::clock::CpuClock;
 use esp_hal::main;
+use esp_hal::{clock::CpuClock, delay::Delay};
 
 // Embedded graphics
 use embedded_graphics::{
@@ -58,6 +59,11 @@ fn main() -> ! {
     esp_alloc::heap_allocator!(72 * 1024);
 
     info!("On screen counter demo running!");
+
+    board.buzzer.set_frequency(261);
+    let mut delay = Delay::new();
+    delay.delay_ms(100);
+    board.buzzer.buzz_off();
 
     let mut pos: i32 = 1;
     let mut need_redraw = true;
