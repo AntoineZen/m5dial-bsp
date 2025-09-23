@@ -204,21 +204,36 @@
 <a href="#203" id="203">203</a>
 <a href="#204" id="204">204</a>
 <a href="#205" id="205">205</a>
-<a href="#206" id="206">206</a></pre></div><pre class="rust"><code><span class="doccomment">//! M5Dial Board Support Package
-</span><span class="kw">use </span>esp_hal::Blocking;
-<span class="kw">use </span>gc9a01::{mode::BufferedGraphics, prelude::<span class="kw-2">*</span>, Gc9a01, SPIDisplayInterface};
+<a href="#206" id="206">206</a>
+<a href="#207" id="207">207</a>
+<a href="#208" id="208">208</a>
+<a href="#209" id="209">209</a>
+<a href="#210" id="210">210</a>
+<a href="#211" id="211">211</a>
+<a href="#212" id="212">212</a>
+<a href="#213" id="213">213</a>
+<a href="#214" id="214">214</a>
+<a href="#215" id="215">215</a>
+<a href="#216" id="216">216</a>
+<a href="#217" id="217">217</a>
+<a href="#218" id="218">218</a>
+<a href="#219" id="219">219</a></pre></div><pre class="rust"><code><span class="doccomment">//! M5Dial Board Support Package
+</span><span class="kw">use </span>gc9a01::{mode::BufferedGraphics, prelude::<span class="kw-2">*</span>, Gc9a01, SPIDisplayInterface};
 <span class="comment">// Screen driver
 
 // ESP32 Hardware abstraction
-</span><span class="kw">use </span>esp_hal::delay::Delay;
-<span class="kw">use </span>esp_hal::gpio::{Input, Level, Output, Pull};
-<span class="kw">use </span>esp_hal::spi::{
-    master::{Config <span class="kw">as </span>SpiConfig, Spi},
-    Mode,
+</span><span class="kw">use </span>esp_hal::{
+    delay::Delay,
+    gpio::{Input, Level, Output, Pull},
+    i2c::master::{Config <span class="kw">as </span>I2cConfig, I2c <span class="kw">as </span>EspI2C},
+    ledc::Ledc,
+    spi::{
+        master::{Config <span class="kw">as </span>SpiConfig, Spi},
+        Mode,
+    },
+    time::RateExtU32,
+    Blocking,
 };
-<span class="kw">use </span>esp_hal::time::RateExtU32;
-
-<span class="kw">use </span>esp_hal::i2c::master::{Config <span class="kw">as </span>I2cConfig, I2c <span class="kw">as </span>EspI2C};
 
 <span class="comment">// Generic hardware abstraction
 </span><span class="kw">use </span>embedded_hal_bus::spi::{ExclusiveDevice, NoDelay};
@@ -229,6 +244,8 @@
 <span class="kw">use </span>defmt::error;
 
 <span class="kw">use </span><span class="kw">crate</span>::ft3267::{Ft3267, TouchPoint};
+
+<span class="kw">use </span><span class="kw">crate</span>::buzzer::Buzzer;
 
 <span class="kw">pub type </span>M5DialDisplay = Gc9a01&lt;
     SPIInterface&lt;
@@ -264,11 +281,14 @@
 
     <span class="comment">// Board I2C bus
     </span>tp_i2c: EspI2C&lt;<span class="lifetime">'static</span>, Blocking&gt;,
+
+    <span class="doccomment">/// Buzzer controller
+    </span><span class="kw">pub </span>buzzer: Buzzer,
 }
 
 <span class="doccomment">/// Initialize board periferals from ESP32 peripherals.
 ///
-/// This function initalize the peripherals provided by this BSP
+/// This function initialize the peripherals provided by this BSP
 </span><span class="kw">pub fn </span>init(peripherals: esp_hal::peripherals::Peripherals) -&gt; M5DialBsp {
     <span class="kw">let </span><span class="kw-2">mut </span>delay = Delay::new();
 
@@ -334,6 +354,11 @@
 
     touch.init(<span class="kw-2">&amp;mut </span>tp_i2c);
 
+    <span class="kw">let </span>buz = Buzzer::new(
+        Ledc::new(peripherals.LEDC),
+        Output::new(peripherals.GPIO3, Level::Low),
+    );
+
     M5DialBsp {
         display,
         touch,
@@ -343,13 +368,14 @@
         wake,
         last_wake_state: wake_state,
         tp_i2c,
+        buzzer: buz,
     }
 }
 
 <span class="kw">impl </span>M5DialBsp {
     <span class="doccomment">/// Screen backlight control
     ///
-    /// ## Arugments:
+    /// ## Arguments:
     ///    - **state**: Set backlight ON if true, OFF if false
     </span><span class="kw">pub fn </span>set_backlight(<span class="kw-2">&amp;mut </span><span class="self">self</span>, state: bool) {
         <span class="kw">if </span>state {

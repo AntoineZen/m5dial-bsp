@@ -141,7 +141,7 @@
 <span class="attr">#[derive(Debug)]
 </span><span class="kw">pub struct </span>Ft3267 {
     address: u8,
-    roatation: u8,
+    rotation: u8,
 }
 
 <span class="attr">#[derive(Debug)]
@@ -169,7 +169,7 @@
     <span class="kw">pub fn </span>new(rotation: u8) -&gt; <span class="self">Self </span>{
         Ft3267 {
             address: regs::FT3267_ADDR,
-            roatation: rotation,
+            rotation: rotation,
         }
     }
 
@@ -231,7 +231,7 @@
         <span class="kw">let </span>x = (((buf[<span class="number">0</span>] &amp; <span class="number">0x0f</span>) <span class="kw">as </span>u16) &lt;&lt; <span class="number">8</span>) + buf[<span class="number">1</span>] <span class="kw">as </span>u16;
         <span class="kw">let </span>y = (((buf[<span class="number">2</span>] &amp; <span class="number">0x0f</span>) <span class="kw">as </span>u16) &lt;&lt; <span class="number">8</span>) + buf[<span class="number">3</span>] <span class="kw">as </span>u16;
 
-        <span class="kw">if </span><span class="self">self</span>.roatation == <span class="number">0 </span>{
+        <span class="kw">if </span><span class="self">self</span>.rotation == <span class="number">0 </span>{
             TouchPoint { id: n, x, y }
         } <span class="kw">else </span>{
             TouchPoint { id: n, x: y, y: x }
