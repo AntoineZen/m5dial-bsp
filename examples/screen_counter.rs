@@ -4,6 +4,7 @@
 use embedded_hal::delay::DelayNs;
 // ESP32 Hardware abstraction
 use esp_hal::main;
+use esp_hal::time::RateExtU32;
 use esp_hal::{clock::CpuClock, delay::Delay};
 
 // Embedded graphics
@@ -60,10 +61,10 @@ fn main() -> ! {
 
     info!("On screen counter demo running!");
 
-    board.buzzer.set_frequency(261);
+    board.buzzer.set_frequency(261.Hz());
     let mut delay = Delay::new();
     delay.delay_ms(100);
-    board.buzzer.buzz_off();
+    board.buzzer.off();
 
     let mut pos: i32 = 1;
     let mut need_redraw = true;

@@ -11,7 +11,7 @@ Feature list/roadmap:
  - [X] Button
  - [X] Power management (Shutdown)
  - [X] Touch-screen (FT3267)
- - [ ] Buzzer
+ - [X] Buzzer
  - [ ] Real-time clock (BM8563)
  - [ ] Port A (I2C)
  - [ ] Port B

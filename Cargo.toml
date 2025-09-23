@@ -1,7 +1,7 @@
 [package]
 edition = "2021"
 name = "m5dial-bsp"
-version = "0.3.0"
+version = "0.4.0"
 homepage = "https://github.com/AntoineZen/m5dial-bsp"
 repository = "https://github.com/AntoineZen/m5dial-bsp"
 documentation = "https://antoinezen.github.io/m5dial-bsp"
@@ -24,6 +24,7 @@ esp-backtrace = { version = "0.15.0", features = [
     "panic-handler",
 ] }
 esp-hal = { version = "0.23.1", features = ["defmt", "esp32s3", "unstable"] }
+fugit = "0.3.7"
 gc9a01-rs = "0.4.2"
 heapless = "0.8.0"
 rotary-encoder-hal = "0.6.0"

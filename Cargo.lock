@@ -934,7 +934,7 @@ checksum = "34080505efa8e45a4b816c349525ebe327ceaa8559756f0356cba97ef3bf7432"
 
 [[package]]
 name = "m5dial-bsp"
-version = "0.3.0"
+version = "0.4.0"
 dependencies = [
  "critical-section",
  "defmt 0.3.100",
@@ -945,6 +945,7 @@ dependencies = [
  "esp-alloc",
  "esp-backtrace",
  "esp-hal",
+ "fugit",
  "gc9a01-rs",
  "heapless",
  "rotary-encoder-hal",
