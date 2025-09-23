@@ -5,6 +5,7 @@ default:
 
 # Prepare doucmenation for publishing GitHub pages
 publish-doc:
+    cargo clean
     cargo doc --no-deps
     git checkout gh-pages
     cp -r target/xtensa-esp32s3-none-elf/doc/* .
