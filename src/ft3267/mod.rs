@@ -61,7 +61,7 @@ impl Ft3267 {
     pub fn new(rotation: u8) -> Self {
         Ft3267 {
             address: regs::FT3267_ADDR,
-            rotation: rotation,
+            rotation,
         }
     }
 

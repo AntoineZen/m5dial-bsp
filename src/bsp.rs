@@ -106,13 +106,11 @@ pub fn init(peripherals: esp_hal::peripherals::Peripherals) -> M5DialBsp {
     // Reset the display
     let mut display_reset = Output::new(peripherals.GPIO8, Level::High);
     if display.reset(&mut display_reset, &mut delay).is_err() {
-        error!("Display reset error");
-        loop {}
+        panic!("Display reset error");
     }
     // Init and clear display
     if display.init(&mut delay).is_err() {
-        error!("Display Init error");
-        loop {}
+        panic!("Display Init error");
     }
     display.clear();
     display.fill(0x0);
