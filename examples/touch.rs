@@ -91,7 +91,5 @@ fn main() -> ! {
 
             need_redraw = false;
         }
-
-        //info!("Position {}", pos);
     }
 }

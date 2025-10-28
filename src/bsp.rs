@@ -1,6 +1,10 @@
 //! M5Dial Board Support Package
-use gc9a01::{mode::BufferedGraphics, prelude::*, Gc9a01, SPIDisplayInterface};
-// Screen driver
+
+// Use for debug
+use defmt::error;
+
+// Generic hardware abstraction
+use embedded_hal_bus::spi::{ExclusiveDevice, NoDelay};
 
 // ESP32 Hardware abstraction
 use esp_hal::{
@@ -16,18 +20,19 @@ use esp_hal::{
     Blocking,
 };
 
-// Generic hardware abstraction
-use embedded_hal_bus::spi::{ExclusiveDevice, NoDelay};
+// Screen driver
+use gc9a01::{mode::BufferedGraphics, prelude::*, Gc9a01, SPIDisplayInterface};
+
+// Touch screen driver (local)
+use crate::ft3267::{Ft3267, TouchPoint};
 
 // Rotary encoder
 use rotary_encoder_hal::{DefaultPhase, Rotary};
 
-use defmt::error;
-
-use crate::ft3267::{Ft3267, TouchPoint};
-
+// Buzzer driver (local)
 use crate::buzzer::Buzzer;
 
+/// Define a type alias for the display
 pub type M5DialDisplay = Gc9a01<
     SPIInterface<
         ExclusiveDevice<Spi<'static, Blocking>, Output<'static>, NoDelay>,
@@ -37,18 +42,12 @@ pub type M5DialDisplay = Gc9a01<
     BufferedGraphics<DisplayResolution240x240>,
 >;
 
-/// Holds the board periferals
+/// Holds the board peripherals
 pub struct M5DialBsp {
-    /// Display driver
-    pub display: M5DialDisplay,
-
     // Touch screen controller
     touch: Ft3267,
-    // Backlite command
+    // Backlit command
     display_bl: Output<'static>,
-
-    /// Rottary encoder
-    pub encoder: Rotary<Input<'static>, Input<'static>, DefaultPhase>,
 
     /// HOLD signal, must be set HIGH after startup to maintain power. Can be set LOW to power off.
     /// Note that this signal does not work on USB power
@@ -63,11 +62,17 @@ pub struct M5DialBsp {
     // Board I2C bus
     tp_i2c: EspI2C<'static, Blocking>,
 
+    /// Display driver
+    pub display: M5DialDisplay,
+
+    /// Rotary encoder
+    pub encoder: Rotary<Input<'static>, Input<'static>, DefaultPhase>,
+
     /// Buzzer controller
     pub buzzer: Buzzer,
 }
 
-/// Initialize board periferals from ESP32 peripherals.
+/// Initialize board peripherals from ESP32 peripherals.
 ///
 /// This function initialize the peripherals provided by this BSP
 pub fn init(peripherals: esp_hal::peripherals::Peripherals) -> M5DialBsp {
@@ -83,7 +88,6 @@ pub fn init(peripherals: esp_hal::peripherals::Peripherals) -> M5DialBsp {
     .unwrap()
     .with_sck(peripherals.GPIO6)
     .with_mosi(peripherals.GPIO5);
-    //.with_cs(cs);
 
     // Create SPI device and display interface adapter
     let cs = Output::new(peripherals.GPIO7, Level::High);
@@ -91,6 +95,7 @@ pub fn init(peripherals: esp_hal::peripherals::Peripherals) -> M5DialBsp {
     let display_dev = ExclusiveDevice::new_no_delay(spi, cs).unwrap();
     let display_iface = SPIDisplayInterface::new(display_dev, rs);
 
+    // Create the display driver, taking ownership of the above
     let mut display = Gc9a01::new(
         display_iface,
         DisplayResolution240x240,
@@ -98,6 +103,7 @@ pub fn init(peripherals: esp_hal::peripherals::Peripherals) -> M5DialBsp {
     )
     .into_buffered_graphics();
 
+    // Reset the display
     let mut display_reset = Output::new(peripherals.GPIO8, Level::High);
     if display.reset(&mut display_reset, &mut delay).is_err() {
         error!("Display reset error");
@@ -114,27 +120,30 @@ pub fn init(peripherals: esp_hal::peripherals::Peripherals) -> M5DialBsp {
         error!("Display flush error");
     }
 
+    // Build the rotary encoder
     let pin_a = Input::new(peripherals.GPIO41, Pull::None);
     let pin_b = Input::new(peripherals.GPIO40, Pull::None);
-
     let encoder = Rotary::new(pin_a, pin_b);
 
+    // Screen backlit control
     let bl = Output::new(peripherals.GPIO9, Level::Low);
 
+    // Make the power persistent
     let hold = Output::new(peripherals.GPIO46, Level::High);
 
+    // Dial button, a.k.a wake signal
     let wake = Input::new(peripherals.GPIO42, Pull::None);
     let wake_state = wake.is_low();
 
+    // Create touch-screen driver and initialize it
     let mut tp_i2c = EspI2C::new(peripherals.I2C0, I2cConfig::default())
         .unwrap()
         .with_sda(peripherals.GPIO11)
         .with_scl(peripherals.GPIO12);
-
     let touch = Ft3267::new(0);
-
     touch.init(&mut tp_i2c);
 
+    // Crate the buzzer driver, using the LEDC peripheral and connect GPIO3
     let buz = Buzzer::new(
         Ledc::new(peripherals.LEDC),
         Output::new(peripherals.GPIO3, Level::Low),
@@ -169,7 +178,7 @@ impl M5DialBsp {
     /// Shutdown the board.
     ///
     /// This method shut-down the board by setting the pin G46 / signal HOLD low.
-    /// This has no effect when powered by USB. It only works when the board is powered using the green screw terinal (P5 on schematics).
+    /// This has no effect when powered by USB. It only works when the board is powered using the green screw terminal (P5 on schematics).
     ///
     /// **NOTE:** The pin signal is set high as start by the [init()](init) function.
     ///

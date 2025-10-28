@@ -2,7 +2,7 @@
 //!
 //! Ported from https://github.com/mmMicky/TouchLib/blob/main/src/ModulesFT3267.tpp
 
-// Register definitins
+// Register definitions
 #[allow(dead_code)]
 mod regs;
 
@@ -18,16 +18,25 @@ pub enum Ft3265Gesture {
     Ft3267GestureZomeOut = 0x49,
 }
 
+/// FT3267 Driver.
+///
+/// Use to interact with the FT3267.
 #[derive(Debug)]
 pub struct Ft3267 {
     address: u8,
     rotation: u8,
 }
 
+/// Touch point coordinate.
+///
+/// Returned by gFt3275.get_point().
 #[derive(Debug)]
 pub struct TouchPoint {
+    /// Touch point id, used on multitouch to distinguish touch position.
     pub id: u8,
+    /// Touch point X coordinate.
     pub x: u16,
+    /// Touch point Y coordinate.
     pub y: u16,
 }
 
@@ -46,6 +55,9 @@ impl Ft3267 {
         let _ = bus.write_read(self.address, &addr_buffer, buffer);
     }
 
+    /// Build a new FT3257 driver
+    ///
+    /// rotation: touch screen rotation
     pub fn new(rotation: u8) -> Self {
         Ft3267 {
             address: regs::FT3267_ADDR,
@@ -53,6 +65,7 @@ impl Ft3267 {
         }
     }
 
+    /// Initialize the driver IC.
     pub fn init<T: I2c>(&self, bus: &mut T) -> &Self {
         self.write_register(bus, regs::FT3267_ID_G_THGROUP, 70);
 
@@ -83,12 +96,19 @@ impl Ft3267 {
         self
     }
 
+    /// Pool if the touch screen is touched.
+    ///
+    /// Returns the number of current touch points.
     pub fn pool<T: I2c>(&self, bus: &mut T) -> u8 {
         let mut raw_data: [u8; 1] = [0];
         self.read_register(bus, regs::FT3267_TOUCH_POINTS, &mut raw_data);
         raw_data[0] & 0x0f
     }
 
+    /// Get the coordinate of a touch point
+    ///
+    /// n touch point index.
+    /// return touch point coordinate.
     pub fn get_point<T: I2c>(&self, bus: &mut T, n: u8) -> TouchPoint {
         let mut buf: [u8; 4] = [0; 4];
 

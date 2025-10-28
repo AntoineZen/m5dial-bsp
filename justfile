@@ -3,7 +3,7 @@
 default:
     just -l
 
-# Prepare doucmenation for publishing GitHub pages
+# Prepare documentation for publishing GitHub pages
 publish-doc:
     cargo clean
     cargo doc --no-deps

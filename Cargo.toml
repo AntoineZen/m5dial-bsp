@@ -11,13 +11,13 @@ readme = "README.md"
 
 [dependencies]
 critical-section = "1.2.0"
-defmt = "0.3.10"
-defmt-rtt = "0.4.1"
+defmt = "0.3.100"
+defmt-rtt = "0.4.2"
 embedded-graphics = "0.8.1"
 embedded-hal = "1.0.0"
 embedded-hal-bus = "0.3.0"
 esp-alloc = { version = "0.6.0" }
-esp-backtrace = { version = "0.15.0", features = [
+esp-backtrace = { version = "0.15.1", features = [
     "defmt",
     "esp32s3",
     "exception-handler",

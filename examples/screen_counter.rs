@@ -20,10 +20,9 @@ use embedded_graphics::{
 use rotary_encoder_hal::Direction;
 
 // heap-less string buffer
-
 use heapless::String;
 
-// Logging stuff
+// Logging
 use core::fmt::Write;
 use defmt::{debug, error, info};
 use {defmt_rtt as _, esp_backtrace as _};
@@ -55,12 +54,15 @@ fn main() -> ! {
 
     let mut style_index: usize = 0;
 
+    // String buffer
     let mut buffer: String<64> = String::new();
 
+    // Memory allocator
     esp_alloc::heap_allocator!(72 * 1024);
 
     info!("On screen counter demo running!");
 
+    // Emit a sound
     board.buzzer.set_frequency(261.Hz());
     let mut delay = Delay::new();
     delay.delay_ms(100);
@@ -77,6 +79,7 @@ fn main() -> ! {
             }
         }
 
+        // Test if encoder has rotated
         match board.encoder.update().unwrap() {
             Direction::Clockwise => {
                 pos += 1;
@@ -89,6 +92,7 @@ fn main() -> ! {
             Direction::None => {}
         }
 
+        // Redraw screen if need refresh
         if need_redraw {
             buffer.clear();
             if write!(&mut buffer, "Position {}", pos).is_ok() {

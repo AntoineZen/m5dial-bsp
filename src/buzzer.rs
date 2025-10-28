@@ -11,6 +11,7 @@ use esp_hal::{
 
 use fugit::HertzU32;
 
+/// Buzzer driver using LEDC peripheral to generate the PWM signal.
 pub struct Buzzer {
     ledc: Ledc<'static>,
     pin: Output<'static>,
@@ -19,7 +20,7 @@ pub struct Buzzer {
 impl Buzzer {
     /// Build a new buzzer driver.
     ///
-    /// This required a LEDC periferal driver `ledc` and the output `pin`
+    /// This required a LEDC peripheral driver `ledc` and the output `pin`
     pub fn new(mut ledc: Ledc<'static>, pin: Output<'static>) -> Self {
         // Initialize and create handle for LEDC peripheral
         //let mut ledc = Ledc::new(led_perif);
@@ -28,7 +29,7 @@ impl Buzzer {
         Buzzer { ledc, pin }
     }
 
-    // Private function to do the actual PWM frequency and dutty settings.
+    // Private function to do the actual PWM frequency and duty settings.
     fn configure(&mut self, freq: HertzU32, duty: u8) {
         let mut timer = self.ledc.timer::<LowSpeed>(timer::Number::Timer0);
         let mut channel = self.ledc.channel(channel::Number::Channel0, &mut self.pin);
