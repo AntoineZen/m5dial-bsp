@@ -15,6 +15,10 @@ publish-doc:
 run-counter:
     cargo run --example screen_counter
 
+# Run screen_counter_irq example.
+run-counter-irq:
+    cargo run --example screen_counter_irq
+
 
 # Run touch screen example.
 run-touch:
