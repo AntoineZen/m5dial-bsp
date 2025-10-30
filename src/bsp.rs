@@ -1,13 +1,13 @@
 //! M5Dial Board Support Package
 
 // Use for debug
-use defmt::error;
+pub use defmt::error;
 
 // Generic hardware abstraction
-use embedded_hal_bus::spi::{ExclusiveDevice, NoDelay};
+pub use embedded_hal_bus::spi::{ExclusiveDevice, NoDelay};
 
 // ESP32 Hardware abstraction
-use esp_hal::{
+pub use esp_hal::{
     delay::Delay,
     gpio::{Input, Level, Output, Pull},
     i2c::master::{Config as I2cConfig, I2c as EspI2C},
@@ -21,16 +21,16 @@ use esp_hal::{
 };
 
 // Screen driver
-use gc9a01::{mode::BufferedGraphics, prelude::*, Gc9a01, SPIDisplayInterface};
+pub use gc9a01::{mode::BufferedGraphics, prelude::*, Gc9a01, SPIDisplayInterface};
 
 // Touch screen driver (local)
-use crate::ft3267::{Ft3267, TouchPoint};
+pub use crate::ft3267::{Ft3267, TouchPoint};
 
 // Rotary encoder
-use rotary_encoder_hal::{DefaultPhase, Rotary};
+pub use rotary_encoder_hal::{DefaultPhase, Rotary};
 
 // Buzzer driver (local)
-use crate::buzzer::Buzzer;
+pub use crate::buzzer::Buzzer;
 
 /// Define a type alias for the display
 pub type M5DialDisplay = Gc9a01<
@@ -65,20 +65,10 @@ pub struct M5DialBsp {
 
     /// State of wake last time it was pooled.
     last_wake_state: bool,
-
-    /// Touch controller
-    pub touch: TouchControl,
-
-    /// Display driver
-    pub display: M5DialDisplay,
-
-    /// Rotary encoder
-    pub encoder: M5DialEncoder,
-
-    /// Buzzer controller
-    pub buzzer: Buzzer,
 }
 
+/// Get rottary encoder
+#[macro_export]
 macro_rules! get_encoder {
     ($peripherals:ident) => {{
         // Build the rotary encoder
@@ -88,6 +78,8 @@ macro_rules! get_encoder {
     }};
 }
 
+/// Get screen controller
+#[macro_export]
 macro_rules! get_screen {
     ($peripherals:ident) => {{
         let mut delay = Delay::new();
@@ -134,6 +126,10 @@ macro_rules! get_screen {
     }};
 }
 
+/// Get the touch screen controller
+///
+/// See type TouchControl
+#[macro_export]
 macro_rules! get_touch {
     ($peripherals:ident) => {{
         let mut tp_i2c =
@@ -141,10 +137,12 @@ macro_rules! get_touch {
         let touch = Ft3267::new(0);
         touch.init(&mut tp_i2c);
 
-        TouchControl { tp_i2c, touch }
+        TouchControl::new(tp_i2c, touch)
     }};
 }
 
+/// Get the buzzer
+#[macro_export]
 macro_rules! get_buzzer {
     ($peripherals:ident) => {
         Buzzer::new(
@@ -157,41 +155,27 @@ macro_rules! get_buzzer {
 /// Initialize board peripherals from ESP32 peripherals.
 ///
 /// This function initialize the peripherals provided by this BSP
-pub fn init(peripherals: esp_hal::peripherals::Peripherals) -> M5DialBsp {
-    let display = get_screen!(peripherals);
-
-    // Build the rotary encoder
-    let encoder = get_encoder!(peripherals);
-
-    // Screen backlit control
-    let bl = Output::new(peripherals.GPIO9, Level::Low);
-
-    // Make the power persistent
-    let hold = Output::new(peripherals.GPIO46, Level::High);
-
-    // Dial button, a.k.a wake signal
-    let wake = Input::new(peripherals.GPIO42, Pull::None);
-    let wake_state = wake.is_low();
-
-    // Create touch-screen driver and initialize it
-    let touch = get_touch!(peripherals);
-
-    // Crate the buzzer driver
-    let buz = get_buzzer!(peripherals);
-
-    M5DialBsp {
-        display,
-        touch,
-        display_bl: bl,
-        encoder,
-        hold,
-        wake,
-        last_wake_state: wake_state,
-        buzzer: buz,
-    }
+#[macro_export]
+macro_rules! board_init {
+    ($peripherals:ident) => {
+        M5DialBsp::new(
+            Output::new($peripherals.GPIO9, Level::Low),
+            Output::new($peripherals.GPIO46, Level::High),
+            Input::new($peripherals.GPIO42, Pull::None),
+        )
+    };
 }
 
 impl M5DialBsp {
+    pub fn new(bl: Output<'static>, hold: Output<'static>, wake: Input<'static>) -> M5DialBsp {
+        let wake_state = wake.is_low();
+        M5DialBsp {
+            display_bl: bl,
+            hold,
+            wake,
+            last_wake_state: wake_state,
+        }
+    }
     /// Screen backlight control
     ///
     /// ## Arguments:
@@ -239,6 +223,9 @@ impl M5DialBsp {
 }
 
 impl TouchControl {
+    pub fn new(tp_i2c: EspI2C<'static, Blocking>, touch: Ft3267) -> TouchControl {
+        TouchControl { tp_i2c, touch }
+    }
     /// Query if the touch screen is touched. If touch screen
     /// is un-touched, return None. Return Some() with detected
     /// finger count if touched (supports multi-touch).

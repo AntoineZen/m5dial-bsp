@@ -19,6 +19,7 @@ use defmt::{error, info};
 use {defmt_rtt as _, esp_backtrace as _};
 
 use m5dial_bsp::bsp;
+use m5dial_bsp::bsp::*;
 
 extern crate alloc;
 
@@ -28,8 +29,11 @@ fn main() -> ! {
     let config = esp_hal::Config::default().with_cpu_clock(CpuClock::max());
     let peripherals = esp_hal::init(config);
 
+    let mut touch = m5dial_bsp::get_touch!(peripherals);
+    let mut display = m5dial_bsp::get_screen!(peripherals);
+
     // Initialize the BSP
-    let mut board = bsp::init(peripherals);
+    let mut board = m5dial_bsp::board_init!(peripherals);
 
     // Show must go on !
     board.set_backlight(true);
@@ -49,7 +53,7 @@ fn main() -> ! {
     esp_alloc::heap_allocator!(72 * 1024);
 
     info!("On screen counter demo running!");
-    let (w, h) = board.display.bounds();
+    let (w, h) = display.bounds();
     let mut point = Point::new((w / 2).into(), (h / 2).into());
 
     let mut need_redraw = true;
@@ -62,9 +66,9 @@ fn main() -> ! {
             }
         }
 
-        if let Some(_) = board.touch.count() {
+        if let Some(_) = touch.count() {
             //info!("Touch: {}", touch_count);
-            let p = board.touch.position(0);
+            let p = touch.position(0);
             info!("Pos: x={} y={}", p.x, p.y);
             point.x = p.x.into();
             point.y = p.y.into();
@@ -72,7 +76,7 @@ fn main() -> ! {
         }
 
         if need_redraw {
-            board.display.clear();
+            display.clear();
             // Create the cycle with the given color
             let style = PrimitiveStyleBuilder::new()
                 .stroke_color(COLOR_LIST[style_index])
@@ -82,10 +86,10 @@ fn main() -> ! {
 
             Circle::with_center(point, 50)
                 .into_styled(style)
-                .draw(&mut board.display)
+                .draw(&mut display)
                 .unwrap();
 
-            if board.display.flush().is_err() {
+            if display.flush().is_err() {
                 error!("Display flush error");
             }
 

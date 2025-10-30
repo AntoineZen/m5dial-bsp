@@ -24,10 +24,10 @@ use heapless::String;
 
 // Logging
 use core::fmt::Write;
-use defmt::{debug, error, info};
+use defmt::{error, info};
 use {defmt_rtt as _, esp_backtrace as _};
 
-use m5dial_bsp::bsp;
+use m5dial_bsp::bsp::*;
 
 extern crate alloc;
 
@@ -37,7 +37,11 @@ fn main() -> ! {
     let config = esp_hal::Config::default().with_cpu_clock(CpuClock::max());
     let peripherals = esp_hal::init(config);
 
-    let mut board = bsp::init(peripherals);
+    let mut buzzer = m5dial_bsp::get_buzzer!(peripherals);
+    let mut display = m5dial_bsp::get_screen!(peripherals);
+    let mut encoder = m5dial_bsp::get_encoder!(peripherals);
+
+    let mut board = m5dial_bsp::board_init!(peripherals);
 
     // Show must go on !
     board.set_backlight(true);
@@ -63,10 +67,10 @@ fn main() -> ! {
     info!("On screen counter demo running!");
 
     // Emit a sound
-    board.buzzer.set_frequency(261.Hz());
+    buzzer.set_frequency(261.Hz());
     let mut delay = Delay::new();
     delay.delay_ms(100);
-    board.buzzer.off();
+    buzzer.off();
 
     let mut pos: i32 = 1;
     let mut need_redraw = true;
@@ -80,7 +84,7 @@ fn main() -> ! {
         }
 
         // Test if encoder has rotated
-        match board.encoder.update().unwrap() {
+        match encoder.update().unwrap() {
             Direction::Clockwise => {
                 pos += 1;
                 need_redraw = true;
@@ -96,18 +100,18 @@ fn main() -> ! {
         if need_redraw {
             buffer.clear();
             if write!(&mut buffer, "Position {}", pos).is_ok() {
-                board.display.clear();
+                display.clear();
                 // Create a text at position (20, 30) and draw it using the previously defined style
                 Text::with_alignment(
                     &buffer,
-                    board.display.bounding_box().center(),
+                    display.bounding_box().center(),
                     STYLE_LIST[style_index],
                     embedded_graphics::text::Alignment::Center,
                 )
-                .draw(&mut board.display)
+                .draw(&mut display)
                 .unwrap();
 
-                if board.display.flush().is_err() {
+                if display.flush().is_err() {
                     error!("Display flush error");
                 }
             } else {
