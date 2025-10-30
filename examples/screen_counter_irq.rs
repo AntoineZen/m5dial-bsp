@@ -47,23 +47,25 @@ static POSITION: Mutex<RefCell<i32>> = Mutex::new(RefCell::new(0));
 #[handler]
 #[ram]
 fn encoder_irq() {
-    //
-
-    let rot = critical_section::with(|cs| {
-        ENCODER
+    critical_section::with(|cs| {
+        let rot = ENCODER
             .borrow_ref_mut(cs)
             .as_mut()
             .unwrap()
             .update()
-            .unwrap()
-    });
-    match rot {
-        Direction::Clockwise => critical_section::with(|cs| *POSITION.borrow_ref_mut(cs) += 1),
-        Direction::CounterClockwise => {
-            critical_section::with(|cs| *POSITION.borrow_ref_mut(cs) -= 1);
+            .unwrap();
+        match rot {
+            Direction::Clockwise => *POSITION.borrow_ref_mut(cs) += 1,
+            Direction::CounterClockwise => {
+                *POSITION.borrow_ref_mut(cs) -= 1;
+            }
+            Direction::None => {}
         }
-        Direction::None => {}
-    }
+    });
+}
+
+fn get_encoder_position() -> i32 {
+    critical_section::with(|cs| *POSITION.borrow_ref_mut(cs))
 }
 
 #[main]
@@ -110,6 +112,7 @@ fn main() -> ! {
     delay.delay_ms(100);
     buzzer.off();
 
+    // Create the IRQ and place the encoder in global context
     critical_section::with(|cs| {
         encoder.pin_a().listen(Event::AnyEdge);
         encoder.pin_b().listen(Event::AnyEdge);
@@ -128,7 +131,7 @@ fn main() -> ! {
             }
         }
 
-        current_pos = critical_section::with(|cs| *POSITION.borrow_ref_mut(cs));
+        current_pos = get_encoder_position();
 
         // Test if encoder has rotated
         if current_pos != old_pos {
