@@ -62,9 +62,9 @@ fn main() -> ! {
             }
         }
 
-        if let Some(_) = board.touch_count() {
+        if let Some(_) = board.touch.count() {
             //info!("Touch: {}", touch_count);
-            let p = board.touch_position(0);
+            let p = board.touch.position(0);
             info!("Pos: x={} y={}", p.x, p.y);
             point.x = p.x.into();
             point.y = p.y.into();
