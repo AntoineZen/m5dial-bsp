@@ -132,8 +132,10 @@ macro_rules! get_screen {
 #[macro_export]
 macro_rules! get_touch {
     ($peripherals:ident) => {{
-        let mut tp_i2c =
-            EspI2C::new($peripherals.I2C0, I2cConfig::default()).expect("Failed to get I2C0");
+        let mut tp_i2c = EspI2C::new($peripherals.I2C0, I2cConfig::default())
+            .expect("Failed to get I2C0")
+            .with_sda($peripherals.GPIO11)
+            .with_scl($peripherals.GPIO12);
         let touch = Ft3267::new(0);
         touch.init(&mut tp_i2c);
 
