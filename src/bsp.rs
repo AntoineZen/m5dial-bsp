@@ -143,6 +143,17 @@ macro_rules! get_touch {
     }};
 }
 
+/// Get the exteran I2C bus
+#[macro_export]
+macro_rules! get_port_a_i2c {
+    ($peripherals:ident) => {{
+        EspI2C::new($peripherals.I2C1, I2cConfig::default())
+            .expect("Failed to get I2C1")
+            .with_sda($peripherals.GPIO13)
+            .with_scl($peripherals.GPIO15);
+    }};
+}
+
 /// Get the buzzer
 #[macro_export]
 macro_rules! get_buzzer {
