@@ -18,7 +18,6 @@ use embedded_graphics::{
 use defmt::{error, info};
 use {defmt_rtt as _, esp_backtrace as _};
 
-use m5dial_bsp::bsp;
 use m5dial_bsp::bsp::*;
 
 extern crate alloc;

@@ -120,7 +120,6 @@ fn main() -> ! {
     });
 
     let mut old_pos: i32 = 1;
-    let mut current_pos: i32 = 1;
     let mut need_redraw = true;
     loop {
         // Change Test color on button push
@@ -131,10 +130,11 @@ fn main() -> ! {
             }
         }
 
-        current_pos = get_encoder_position();
+        let current_pos = get_encoder_position();
 
         // Test if encoder has rotated
         if current_pos != old_pos {
+            debug!("Encoder at new position {}", current_pos);
             need_redraw = true;
             old_pos = current_pos;
         }
