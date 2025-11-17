@@ -143,7 +143,7 @@ macro_rules! get_touch {
     }};
 }
 
-/// Get the exteran I2C bus
+/// Get the Port.A external I2C bus
 #[macro_export]
 macro_rules! get_port_a_i2c {
     ($peripherals:ident) => {{
@@ -151,6 +151,22 @@ macro_rules! get_port_a_i2c {
             .expect("Failed to get I2C1")
             .with_sda($peripherals.GPIO13)
             .with_scl($peripherals.GPIO15);
+    }};
+}
+
+/// Get PORT.B input (white wire)
+#[macro_export]
+macro_rules! get_port_b_in {
+    ($peripherals:ident, $input_config:expr) => {{
+        Input::new($peripherals.GPIO1, $input_config)
+    }};
+}
+
+/// Get PORT.B output (yellow wire)
+#[macro_export]
+macro_rules! get_port_b_out {
+    ($peripherals:ident) => {{
+        Output::new($peripherals.GPIO2, Level::Low)
     }};
 }
 
