@@ -4,7 +4,6 @@
 use embedded_hal::delay::DelayNs;
 // ESP32 Hardware abstraction
 use esp_hal::main;
-use esp_hal::time::RateExtU32;
 use esp_hal::{clock::CpuClock, delay::Delay};
 
 // Embedded graphics
@@ -27,8 +26,7 @@ use core::fmt::Write;
 use defmt::{debug, error, info};
 use {defmt_rtt as _, esp_backtrace as _};
 
-use esp_hal::gpio::{Event, Input, Io, Level, Output, Pull};
-use esp_hal::interrupt::InterruptConfigurable;
+use esp_hal::gpio::{Event, Input, Io, Level, Output};
 use esp_hal::{handler, ram};
 use m5dial_bsp::bsp::*;
 
@@ -47,6 +45,7 @@ static POSITION: Mutex<RefCell<i32>> = Mutex::new(RefCell::new(0));
 #[handler]
 #[ram]
 fn encoder_irq() {
+    debug!("In IRQ");
     critical_section::with(|cs| {
         let rot = ENCODER
             .borrow_ref_mut(cs)
@@ -61,6 +60,18 @@ fn encoder_irq() {
             }
             Direction::None => {}
         }
+        ENCODER
+            .borrow_ref_mut(cs)
+            .as_mut()
+            .unwrap()
+            .pin_a()
+            .clear_interrupt();
+        ENCODER
+            .borrow_ref_mut(cs)
+            .as_mut()
+            .unwrap()
+            .pin_b()
+            .clear_interrupt();
     });
 }
 
@@ -74,7 +85,7 @@ fn main() -> ! {
     let config = esp_hal::Config::default().with_cpu_clock(CpuClock::max());
     let peripherals = esp_hal::init(config);
 
-    let mut buzzer = m5dial_bsp::get_buzzer!(peripherals);
+    //let mut buzzer = m5dial_bsp::get_buzzer!(peripherals);
     let mut display = m5dial_bsp::get_screen!(peripherals);
     let mut encoder = m5dial_bsp::get_encoder!(peripherals);
 
@@ -99,18 +110,20 @@ fn main() -> ! {
     let mut buffer: String<64> = String::new();
 
     // Memory allocator
-    esp_alloc::heap_allocator!(72 * 1024);
+    esp_alloc::heap_allocator!(size: 72 * 1024);
 
     let mut io = Io::new(peripherals.IO_MUX);
     io.set_interrupt_handler(encoder_irq);
 
     info!("On screen counter demo running!");
 
+    // TODO : Make the buzzer work again.
+
     // Emit a sound
-    buzzer.set_frequency(261.Hz());
-    let mut delay = Delay::new();
-    delay.delay_ms(100);
-    buzzer.off();
+    //buzzer.set_frequency(261_i32.Hz());
+    //let mut delay = Delay::new();
+    //delay.delay_ms(100);
+    //buzzer.off();
 
     // Create the IRQ and place the encoder in global context
     critical_section::with(|cs| {

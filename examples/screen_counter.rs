@@ -4,7 +4,7 @@
 use embedded_hal::delay::DelayNs;
 // ESP32 Hardware abstraction
 use esp_hal::main;
-use esp_hal::time::RateExtU32;
+use esp_hal::time::Rate;
 use esp_hal::{clock::CpuClock, delay::Delay};
 
 // Embedded graphics
@@ -28,7 +28,6 @@ use defmt::{error, info};
 use {defmt_rtt as _, esp_backtrace as _};
 
 use m5dial_bsp::bsp::*;
-
 extern crate alloc;
 
 #[main]
@@ -37,7 +36,7 @@ fn main() -> ! {
     let config = esp_hal::Config::default().with_cpu_clock(CpuClock::max());
     let peripherals = esp_hal::init(config);
 
-    let mut buzzer = m5dial_bsp::get_buzzer!(peripherals);
+    //let mut buzzer = m5dial_bsp::get_buzzer!(peripherals);
     let mut display = m5dial_bsp::get_screen!(peripherals);
     let mut encoder = m5dial_bsp::get_encoder!(peripherals);
 
@@ -62,15 +61,17 @@ fn main() -> ! {
     let mut buffer: String<64> = String::new();
 
     // Memory allocator
-    esp_alloc::heap_allocator!(72 * 1024);
+    esp_alloc::heap_allocator!(size: 72 * 1024);
 
     info!("On screen counter demo running!");
 
+    // TODO: Find a way to make the buzzer work again.
+
     // Emit a sound
-    buzzer.set_frequency(261.Hz());
-    let mut delay = Delay::new();
-    delay.delay_ms(100);
-    buzzer.off();
+    //buzzer.set_frequency(Rate::from_hz(261));
+    //let mut delay = Delay::new();
+    //delay.delay_ms(100);
+    //buzzer.off();
 
     let mut pos: i32 = 1;
     let mut need_redraw = true;

@@ -49,7 +49,7 @@ fn main() -> ! {
 
     let mut style_index: usize = 0;
 
-    esp_alloc::heap_allocator!(72 * 1024);
+    esp_alloc::heap_allocator!(size: 72 * 1024);
 
     info!("On screen counter demo running!");
     let (w, h) = display.bounds();

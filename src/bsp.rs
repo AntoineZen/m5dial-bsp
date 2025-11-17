@@ -9,14 +9,14 @@ pub use embedded_hal_bus::spi::{ExclusiveDevice, NoDelay};
 // ESP32 Hardware abstraction
 pub use esp_hal::{
     delay::Delay,
-    gpio::{Input, Level, Output, Pull},
+    gpio::{Input, InputConfig, Level, Output, OutputConfig, OutputPin, Pull},
     i2c::master::{Config as I2cConfig, I2c as EspI2C},
     ledc::Ledc,
     spi::{
         master::{Config as SpiConfig, Spi},
         Mode,
     },
-    time::RateExtU32,
+    time::Rate,
     Blocking,
 };
 
@@ -72,8 +72,8 @@ pub struct M5DialBsp {
 macro_rules! get_encoder {
     ($peripherals:ident) => {{
         // Build the rotary encoder
-        let pin_a = Input::new($peripherals.GPIO41, Pull::None);
-        let pin_b = Input::new($peripherals.GPIO40, Pull::None);
+        let pin_a = Input::new($peripherals.GPIO41, InputConfig::default());
+        let pin_b = Input::new($peripherals.GPIO40, InputConfig::default());
         Rotary::new(pin_a, pin_b)
     }};
 }
@@ -87,7 +87,7 @@ macro_rules! get_screen {
         let spi = Spi::new(
             $peripherals.SPI2,
             SpiConfig::default()
-                .with_frequency(50.MHz())
+                .with_frequency(Rate::from_mhz(50))
                 .with_mode(Mode::_0),
         )
         .unwrap()
@@ -95,8 +95,8 @@ macro_rules! get_screen {
         .with_mosi($peripherals.GPIO5);
 
         // Create SPI device and display interface adapter
-        let cs = Output::new($peripherals.GPIO7, Level::High);
-        let rs = Output::new($peripherals.GPIO4, Level::High);
+        let cs = Output::new($peripherals.GPIO7, Level::High, OutputConfig::default());
+        let rs = Output::new($peripherals.GPIO4, Level::High, OutputConfig::default());
         let display_dev = ExclusiveDevice::new_no_delay(spi, cs).unwrap();
         let display_iface = SPIDisplayInterface::new(display_dev, rs);
 
@@ -109,7 +109,8 @@ macro_rules! get_screen {
         .into_buffered_graphics();
 
         // Reset the display
-        let mut display_reset = Output::new($peripherals.GPIO8, Level::High);
+        let mut display_reset =
+            Output::new($peripherals.GPIO8, Level::High, OutputConfig::default());
         if display.reset(&mut display_reset, &mut delay).is_err() {
             panic!("Display reset error");
         }
@@ -174,10 +175,7 @@ macro_rules! get_port_b_out {
 #[macro_export]
 macro_rules! get_buzzer {
     ($peripherals:ident) => {
-        Buzzer::new(
-            Ledc::new($peripherals.LEDC),
-            Output::new($peripherals.GPIO3, Level::Low),
-        )
+        Buzzer::new(Ledc::new($peripherals.LEDC), $peripherals.GPIO3.into())
     };
 }
 
@@ -188,9 +186,9 @@ macro_rules! get_buzzer {
 macro_rules! board_init {
     ($peripherals:ident) => {
         M5DialBsp::new(
-            Output::new($peripherals.GPIO9, Level::Low),
-            Output::new($peripherals.GPIO46, Level::High),
-            Input::new($peripherals.GPIO42, Pull::None),
+            Output::new($peripherals.GPIO9, Level::Low, OutputConfig::default()),
+            Output::new($peripherals.GPIO46, Level::High, OutputConfig::default()),
+            Input::new($peripherals.GPIO42, InputConfig::default()),
         )
     };
 }

@@ -11,11 +11,11 @@ Feature list/roadmap:
  - [X] Button
  - [X] Power management (Shutdown)
  - [X] Touch-screen (FT3267)
- - [X] Buzzer
+ - [ ] Buzzer
  - [ ] Real-time clock (BM8563)
  - [X] Port A (I2C)
  - [X] Port B
- - [ ] Upgrade to be compatible to esp-hal v1.0.0
+ - [X] Upgrade to be compatible to esp-hal v1.0.0
 
 ## How to use
 

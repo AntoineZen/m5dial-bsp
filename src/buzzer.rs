@@ -1,40 +1,40 @@
 // ESP32 Hardware abstraction
 use esp_hal::{
-    gpio::Output,
+    gpio::{AnyPin, DriveMode},
     ledc::{
-        channel::{self, ChannelIFace},
-        timer::{self, TimerIFace},
+        channel::{self, Channel, ChannelIFace},
+        timer::{self, Timer, TimerIFace},
         LSGlobalClkSource, Ledc, LowSpeed,
     },
-    time::RateExtU32,
+    time::Rate,
 };
 
-use fugit::HertzU32;
-
 /// Buzzer driver using LEDC peripheral to generate the PWM signal.
-pub struct Buzzer {
-    ledc: Ledc<'static>,
-    pin: Output<'static>,
+pub struct Buzzer<'t> {
+    timer: Timer<'t, LowSpeed>,
+    channel: Channel<'t, LowSpeed>,
 }
 
-impl Buzzer {
+impl<'t> Buzzer<'t> {
     /// Build a new buzzer driver.
     ///
     /// This required a LEDC peripheral driver `ledc` and the output `pin`
-    pub fn new(mut ledc: Ledc<'static>, pin: Output<'static>) -> Self {
+    pub fn new(mut ledc: Ledc<'t>, pin: AnyPin<'t>) -> Self {
         // Initialize and create handle for LEDC peripheral
         //let mut ledc = Ledc::new(led_perif);
         ledc.set_global_slow_clock(LSGlobalClkSource::APBClk);
 
-        Buzzer { ledc, pin }
+        let channel = ledc.channel(channel::Number::Channel0, pin);
+        let timer = ledc.timer::<LowSpeed>(timer::Number::Timer0);
+        Buzzer { timer, channel }
     }
 
     // Private function to do the actual PWM frequency and duty settings.
-    fn configure(&mut self, freq: HertzU32, duty: u8) {
-        let mut timer = self.ledc.timer::<LowSpeed>(timer::Number::Timer0);
-        let mut channel = self.ledc.channel(channel::Number::Channel0, &mut self.pin);
+    fn configure(&'t mut self, freq: Rate, duty: u8) {
+        //let mut timer = self.ledc.timer::<LowSpeed>(timer::Number::Timer0);
+        //let mut channel = self.ledc.channel(channel::Number::Channel0, self.pin);
 
-        timer
+        self.timer
             .configure(timer::config::Config {
                 duty: timer::config::Duty::Duty5Bit,
                 clock_source: timer::LSClockSource::APBClk,
@@ -42,22 +42,22 @@ impl Buzzer {
             })
             .unwrap();
 
-        channel
+        self.channel
             .configure(channel::config::Config {
-                timer: &timer,
+                timer: &self.timer,
                 duty_pct: duty,
-                pin_config: channel::config::PinConfig::PushPull,
+                drive_mode: DriveMode::PushPull,
             })
             .unwrap();
     }
 
     /// Set buzzing frequency, in Hz
-    pub fn set_frequency(&mut self, freq: HertzU32) {
+    pub fn set_frequency(&'t mut self, freq: Rate) {
         self.configure(freq, 50);
     }
 
     /// Turn the buzzer OFF
-    pub fn off(&mut self) {
-        self.configure(1000.Hz(), 0);
+    pub fn off(&'t mut self) {
+        self.configure(Rate::from_hz(1000), 0);
     }
 }
