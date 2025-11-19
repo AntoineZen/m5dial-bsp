@@ -37,6 +37,8 @@ use core::cell::RefCell;
 use critical_section::Mutex;
 use rotary_encoder_hal::{DefaultPhase, Rotary};
 
+esp_bootloader_esp_idf::esp_app_desc!();
+
 static ENCODER: Mutex<RefCell<Option<Rotary<Input<'static>, Input<'static>, DefaultPhase>>>> =
     Mutex::new(RefCell::new(None));
 
