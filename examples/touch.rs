@@ -22,6 +22,8 @@ use m5dial_bsp::bsp::*;
 
 extern crate alloc;
 
+esp_bootloader_esp_idf::esp_app_desc!();
+
 #[main]
 fn main() -> ! {
     // Get periferals from the hal.
