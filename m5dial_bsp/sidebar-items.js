@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":["bsp","buzzer","ft3267"]};
+window.SIDEBAR_ITEMS = {"macro":["board_init","get_buzzer","get_encoder","get_port_a_i2c","get_port_b_in","get_port_b_out","get_screen","get_touch"],"mod":["bsp","buzzer","ft3267"]};
