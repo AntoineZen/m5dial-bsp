@@ -1,7 +1,7 @@
 [package]
 edition = "2021"
 name = "m5dial-bsp"
-version = "0.4.0"
+version = "0.5.0"
 homepage = "https://github.com/AntoineZen/m5dial-bsp"
 repository = "https://github.com/AntoineZen/m5dial-bsp"
 documentation = "https://antoinezen.github.io/m5dial-bsp"

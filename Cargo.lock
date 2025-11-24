@@ -527,14 +527,20 @@ dependencies = [
 
 [[package]]
 name = "esp-backtrace"
-version = "0.15.1"
+version = "0.18.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e4cd70abe47945c9116972781b5c05277ad855a5f5569fe2afd3e2e61a103cc0"
+checksum = "3318413fb566c7227387f67736cf70cd74d80a11f2bb31c7b95a9eb48d079669"
 dependencies = [
- "defmt 0.3.100",
- "esp-build",
+ "cfg-if",
+ "defmt 1.0.1",
+ "document-features",
+ "esp-config",
+ "esp-metadata-generated",
  "esp-println",
+ "heapless 0.9.2",
+ "riscv",
  "semihosting",
+ "xtensa-lx",
 ]
 
 [[package]]
@@ -552,17 +558,6 @@ dependencies = [
  "esp-rom-sys",
  "jiff",
  "strum",
-]
-
-[[package]]
-name = "esp-build"
-version = "0.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8aa1c8f9954c9506699cf1ca10a2adcc226ff10b6ae3cb9e875cf2c6a0b9a372"
-dependencies = [
- "quote",
- "syn 2.0.106",
- "termcolor",
 ]
 
 [[package]]
@@ -657,11 +652,13 @@ checksum = "9a93e39c8ad8d390d248dc7b9f4b59a873f313bf535218b8e2351356972399e3"
 
 [[package]]
 name = "esp-println"
-version = "0.13.1"
+version = "0.16.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "960703930f9f3c899ddedd122ea27a09d6a612c22323157e524af5b18876448e"
+checksum = "5a30e6c9fbcc01c348d46706fef8131c7775ab84c254a3cd65d0cd3f6414d592"
 dependencies = [
- "esp-build",
+ "document-features",
+ "esp-metadata-generated",
+ "esp-sync",
  "log",
 ]
 
@@ -1009,7 +1006,7 @@ checksum = "34080505efa8e45a4b816c349525ebe327ceaa8559756f0356cba97ef3bf7432"
 
 [[package]]
 name = "m5dial-bsp"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "critical-section",
  "defmt 0.3.100",
