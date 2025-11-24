@@ -19,13 +19,13 @@ Feature list/roadmap:
 
 ## How to use
 
-First generate a base project using [esp-generate](https://github.com/esp-rs/esp-generate) or [esp-idf-template](https://github.com/esp-rs/esp-idf-template) as described in they respective documentations.
+First generate a base project using [esp-generate](https://github.com/esp-rs/esp-generate)  as described in its documentation.
 Then, add this crate to your `Cargo.toml`:
 
 ```toml
 [dependencies]
 ....
-rotary-encoder-hal = "0.6.0"
+m5dial-bsp= "0.5.0"
 ....
 ```
 
@@ -35,18 +35,22 @@ In your main function then initialize this hall and use it:
 let config = esp_hal::Config::default().with_cpu_clock(CpuClock::max());
 let peripherals = esp_hal::init(config);
 
-let mut board = m5dial::init(peripherals);
-....
+let mut display = m5dial_bsp::get_screen!(peripherals);
+let mut encoder = m5dial_bsp::get_encoder!(peripherals);
+
+let mut board = m5dial_bsp::board_init!(peripherals);
+
 ```
 
-For more information, please refer to the [API Documentation](https://antoinezen.github.io/m5dial-bsp).
+For more information, please refer to the [API Documentation](https://antoinezen.github.io/m5dial-bsp). (Don't refers to the doc on docs.rs, as they fail to compile due to the lack of ESP specific toolchain.)
 
 ## Examples
 
-See :
+Examples are located in the `examples` folder. Here is an index:
 
- - [screen_counter.rs](examples/screen_counter.rs)
- - [touch.rs](examples/touch.rs)
+ - [screen_counter.rs](examples/screen_counter.rs): Demonstrate the rotary encoder usage.
+ - [screen_counter_irq.rs](examples/screen_counter_irq.rs):  Demonstrate the rotary encoder usage, using interrupts.
+ - [touch.rs](examples/touch.rs): Demonstrate the touchscreen.
 
 ## License
 
