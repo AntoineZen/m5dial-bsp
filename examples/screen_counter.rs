@@ -1,7 +1,6 @@
 #![no_std]
 #![no_main]
 
-use embedded_hal::delay::DelayNs;
 // ESP32 Hardware abstraction
 use esp_hal::main;
 use esp_hal::time::Rate;
@@ -24,7 +23,7 @@ use heapless::String;
 
 // Logging
 use core::fmt::Write;
-use defmt::{error, info};
+use defmt::{debug, error, info, Debug2Format};
 use {defmt_rtt as _, esp_backtrace as _};
 
 use m5dial_bsp::bsp::*;
@@ -38,7 +37,7 @@ fn main() -> ! {
     let config = esp_hal::Config::default().with_cpu_clock(CpuClock::max());
     let peripherals = esp_hal::init(config);
 
-    //let mut buzzer = m5dial_bsp::get_buzzer!(peripherals);
+    let buzzer = m5dial_bsp::get_buzzer!(peripherals);
     let mut display = m5dial_bsp::get_screen!(peripherals);
     let mut encoder = m5dial_bsp::get_encoder!(peripherals);
 
@@ -67,37 +66,48 @@ fn main() -> ! {
 
     info!("On screen counter demo running!");
 
-    // TODO: Find a way to make the buzzer work again.
-
     // Emit a sound
-    //buzzer.set_frequency(Rate::from_hz(261));
-    //let mut delay = Delay::new();
-    //delay.delay_ms(100);
-    //buzzer.off();
+    let mut tone_freq: u32 = 261;
+    let mut buzzer = buzzer
+        .tone(tone_freq as u16, 100)
+        .expect("start tone failed");
 
-    let mut pos: i32 = 1;
+    let mut pos: i32 = 0;
+    let mut pos_delta: i32;
     let mut need_redraw = true;
     loop {
         // Change Test color on button push
         if let Some(state) = board.has_button_changed() {
-            if state == false {
+            if !state {
                 style_index = (style_index + 1) % STYLE_LIST.len();
                 need_redraw = true;
             }
         }
 
         // Test if encoder has rotated
-        match encoder.update().unwrap() {
-            Direction::Clockwise => {
-                pos += 1;
-                need_redraw = true;
-            }
-            Direction::CounterClockwise => {
-                pos -= 1;
-                need_redraw = true;
-            }
-            Direction::None => {}
+        pos_delta = match encoder.update().unwrap() {
+            Direction::Clockwise => 1,
+            Direction::CounterClockwise => -1,
+            Direction::None => 0,
+        };
+
+        if pos_delta < 0 {
+            need_redraw = true;
+            tone_freq = (tone_freq * 1000) / 1059;
+        } else if pos_delta > 0 {
+            need_redraw = true;
+            tone_freq = (tone_freq * 1059) / 1000;
         }
+        pos += pos_delta;
+
+        debug!("tone_freq = {}", tone_freq);
+        buzzer = match buzzer.tone(tone_freq as u16, 100) {
+            Ok(buzzer) => buzzer,
+            Err((buzzer, e)) => {
+                error!("{}", Debug2Format(&e));
+                buzzer
+            }
+        };
 
         // Redraw screen if need refresh
         if need_redraw {
@@ -122,7 +132,5 @@ fn main() -> ! {
             }
             need_redraw = false;
         }
-
-        //info!("Position {}", pos);
     }
 }

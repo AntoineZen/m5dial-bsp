@@ -16,14 +16,14 @@ defmt-rtt = "0.4.2"
 embedded-graphics = "0.8.1"
 embedded-hal = "1.0.0"
 embedded-hal-bus = "0.3.0"
-esp-alloc = { version = "0.9.0" }
-esp-backtrace = { version = "0.18.1", features = [
+esp-alloc = { git = "https://github.com/esp-rs/esp-hal.git", rev = "0db79645c7c5d1d3f1ca2f55f6520396483ea731" }
+esp-backtrace = { git = "https://github.com/esp-rs/esp-hal.git", rev = "0db79645c7c5d1d3f1ca2f55f6520396483ea731", features = [
     "defmt",
     "esp32s3",
     "panic-handler",
 ] }
-esp-bootloader-esp-idf = { version = "0.4.0", features = ["esp32s3"] }
-esp-hal = { version = "1.0.0", features = ["defmt", "esp32s3", "unstable"] }
+esp-bootloader-esp-idf = { git = "https://github.com/esp-rs/esp-hal.git", rev = "0db79645c7c5d1d3f1ca2f55f6520396483ea731", features = ["esp32s3"] }
+esp-hal = { git = "https://github.com/esp-rs/esp-hal.git", rev = "0db79645c7c5d1d3f1ca2f55f6520396483ea731", features = ["defmt", "esp32s3", "unstable"] }
 fugit = "0.3.9"
 gc9a01-rs = "0.4.2"
 heapless = "0.9.2"
