@@ -11,7 +11,7 @@ pub use esp_hal::{
     delay::Delay,
     gpio::{Input, InputConfig, Level, Output, OutputConfig, OutputPin, Pull},
     i2c::master::{Config as I2cConfig, I2c as EspI2C},
-    ledc::Ledc,
+    rmt::Rmt,
     spi::{
         master::{Config as SpiConfig, Spi},
         Mode,
@@ -175,7 +175,10 @@ macro_rules! get_port_b_out {
 #[macro_export]
 macro_rules! get_buzzer {
     ($peripherals:ident) => {
-        Buzzer::new(Ledc::new($peripherals.LEDC), $peripherals.GPIO3.into())
+        Buzzer::new(
+            Rmt::new($peripherals.RMT, Rate::from_mhz(80)).unwrap(),
+            $peripherals.GPIO3.into(),
+        )
     };
 }
 

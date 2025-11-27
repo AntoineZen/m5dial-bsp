@@ -23,7 +23,7 @@ use heapless::String;
 
 // Logging
 use core::fmt::Write;
-use defmt::{debug, error, info};
+use defmt::{debug, error, info, Debug2Format};
 use {defmt_rtt as _, esp_backtrace as _};
 
 use esp_hal::gpio::{Event, Input, Io, Level, Output};
@@ -87,7 +87,7 @@ fn main() -> ! {
     let config = esp_hal::Config::default().with_cpu_clock(CpuClock::max());
     let peripherals = esp_hal::init(config);
 
-    //let mut buzzer = m5dial_bsp::get_buzzer!(peripherals);
+    let buzzer = m5dial_bsp::get_buzzer!(peripherals);
     let mut display = m5dial_bsp::get_screen!(peripherals);
     let mut encoder = m5dial_bsp::get_encoder!(peripherals);
 
@@ -119,13 +119,11 @@ fn main() -> ! {
 
     info!("On screen counter demo running!");
 
-    // TODO : Make the buzzer work again.
-
     // Emit a sound
-    //buzzer.set_frequency(261_i32.Hz());
-    //let mut delay = Delay::new();
-    //delay.delay_ms(100);
-    //buzzer.off();
+    let mut tone_freq: u32 = 261;
+    let mut buzzer = buzzer
+        .tone(tone_freq as u16, 100)
+        .expect("start tone failed");
 
     // Create the IRQ and place the encoder in global context
     critical_section::with(|cs| {
@@ -134,7 +132,7 @@ fn main() -> ! {
         ENCODER.borrow_ref_mut(cs).replace(encoder)
     });
 
-    let mut old_pos: i32 = 1;
+    let mut old_pos: i32 = 0;
     let mut need_redraw = true;
     loop {
         // Change Test color on button push
@@ -149,8 +147,28 @@ fn main() -> ! {
 
         // Test if encoder has rotated
         if current_pos != old_pos {
-            debug!("Encoder at new position {}", current_pos);
+            debug!("Encoder at new position {} ({})", current_pos, old_pos);
             need_redraw = true;
+
+            let pos_delta = current_pos - old_pos;
+            if pos_delta > 0 {
+                for _ in 0..pos_delta {
+                    tone_freq = (tone_freq * 1059) / 1000;
+                }
+            } else {
+                for _ in 0..-pos_delta {
+                    tone_freq = (tone_freq * 1000) / 1059;
+                }
+            };
+            debug!("tone_freq = {}", tone_freq);
+            buzzer = match buzzer.tone(tone_freq as u16, 100) {
+                Ok(buzzer) => buzzer,
+                Err((buzzer, e)) => {
+                    error!("{}", Debug2Format(&e));
+                    buzzer
+                }
+            };
+
             old_pos = current_pos;
         }
 
@@ -177,7 +195,5 @@ fn main() -> ! {
             }
             need_redraw = false;
         }
-
-        //info!("Position {}", pos);
     }
 }
