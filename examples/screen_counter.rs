@@ -3,7 +3,7 @@
 
 // ESP32 Hardware abstraction
 use esp_hal::main;
-use esp_hal::time::Rate;
+use esp_hal::time::{Duration, Rate};
 use esp_hal::{clock::CpuClock, delay::Delay};
 
 // Embedded graphics
@@ -69,7 +69,7 @@ fn main() -> ! {
     // Emit a sound
     let mut tone_freq: u32 = 261;
     let mut buzzer = buzzer
-        .tone(tone_freq as u16, 100)
+        .tone(Rate::from_hz(tone_freq), Duration::from_millis(100))
         .expect("start tone failed");
 
     let mut pos: i32 = 0;
@@ -101,7 +101,7 @@ fn main() -> ! {
         pos += pos_delta;
 
         debug!("tone_freq = {}", tone_freq);
-        buzzer = match buzzer.tone(tone_freq as u16, 100) {
+        buzzer = match buzzer.tone(Rate::from_hz(tone_freq), Duration::from_millis(100)) {
             Ok(buzzer) => buzzer,
             Err((buzzer, e)) => {
                 error!("{}", Debug2Format(&e));

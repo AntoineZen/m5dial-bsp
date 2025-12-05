@@ -1,12 +1,16 @@
 use core::result::Result::{Err, Ok};
 
 // ESP32 Hardware abstraction
+use defmt::error;
+use esp_hal::time::{Duration, Rate};
 use esp_hal::{
     gpio::{AnyPin, Level},
-    rmt::{Channel, ContinuousTxTransaction, LoopMode, PulseCode, Rmt, Tx, TxChannelConfig, TxChannelCreator},
+    rmt::{
+        Channel, ContinuousTxTransaction, LoopMode, PulseCode, Rmt, Tx, TxChannelConfig,
+        TxChannelCreator,
+    },
     Blocking,
 };
-use defmt::{error};
 
 const ESP32S3_RMT_DEFAULT_CLK_FREQ_HZ: u32 = 80_000_000;
 const ESP32S3_RMT_MAX_TX_LOOP_NUM: u32 = 1023; // see ESP32S3 PAC: register is 10 bits wide
@@ -15,8 +19,8 @@ const PULSE_COUNT: usize = 1;
 
 #[derive(Debug)]
 pub enum Error {
-    FreqTooLow(u16),
-    DurationTooLongForFreq((u16, u16)),
+    FreqTooLow(Rate),
+    DurationTooLongForFreq((Duration, Rate)),
     StopError(esp_hal::rmt::Error),
     TxError(esp_hal::rmt::Error),
 }
@@ -41,29 +45,38 @@ impl<'b> Buzzer<'b> {
     pub fn new(rmt: Rmt<'b, Blocking>, pin: AnyPin<'b>) -> Self {
         let channel = rmt
             .channel0
-            .configure_tx(&TxChannelConfig::default()
-                          .with_clk_divider((ESP32S3_RMT_DEFAULT_CLK_FREQ_HZ / CLK_FREQ_HZ).try_into().unwrap())
-                          .with_idle_output_level(Level::Low)
-                          .with_idle_output(false)
-                          .with_carrier_modulation(false)
-                          .with_carrier_high(1)
-                          .with_carrier_low(1)
-                          .with_carrier_level(Level::Low)
-            ).expect("RMT channel0 could not configure")
+            .configure_tx(
+                &TxChannelConfig::default()
+                    .with_clk_divider(
+                        (ESP32S3_RMT_DEFAULT_CLK_FREQ_HZ / CLK_FREQ_HZ)
+                            .try_into()
+                            .unwrap(),
+                    )
+                    .with_idle_output_level(Level::Low)
+                    .with_idle_output(false)
+                    .with_carrier_modulation(false)
+                    .with_carrier_high(1)
+                    .with_carrier_low(1)
+                    .with_carrier_level(Level::Low),
+            )
+            .expect("RMT channel0 could not configure")
             .with_pin(pin);
-        Buzzer { buf: [PulseCode::default(), PulseCode::end_marker()], resource: Resource::Channel(channel) }
+        Buzzer {
+            buf: [PulseCode::default(), PulseCode::end_marker()],
+            resource: Resource::Channel(channel),
+        }
     }
 
-    pub fn tone(mut self, freq_hz: u16, duration_ms: u16) -> Result<Self, (Self, Error)> {
-        if freq_hz as u32 <= CLK_FREQ_HZ / (1 << 16) {
+    pub fn tone(mut self, freq: Rate, duration: Duration) -> Result<Self, (Self, Error)> {
+        if freq.as_hz() <= CLK_FREQ_HZ / (1 << 16) {
             // 50% duty on 15 bits is 16 bits for a single PulseCode -> ~49 Hz
-            return Err((self, Error::FreqTooLow(freq_hz)));
+            return Err((self, Error::FreqTooLow(freq)));
         }
 
-        let wave_length = CLK_FREQ_HZ / (freq_hz as u32); // range checked by freq_hz
-        let count_u32 = (duration_ms as u32 * freq_hz as u32) / 1000;
+        let wave_length = CLK_FREQ_HZ / (freq.as_hz()); // range checked by freq_hz
+        let count_u32 = (duration.as_millis() as u32 * freq.as_hz()) / 1000;
         let count = if count_u32 > ESP32S3_RMT_MAX_TX_LOOP_NUM {
-            return Err((self, Error::DurationTooLongForFreq((duration_ms, freq_hz))));
+            return Err((self, Error::DurationTooLongForFreq((duration, freq))));
         } else {
             count_u32 as u16
         };
@@ -75,16 +88,33 @@ impl<'b> Buzzer<'b> {
         let ch = match self.resource {
             Resource::ContinuousTx(txn) => match txn.stop() {
                 Ok(ch) => ch,
-                Err((e, ch)) => return Err((Buzzer { buf: self.buf, resource: Resource::Channel(ch)}, Error::StopError(e))),
+                Err((e, ch)) => {
+                    return Err((
+                        Buzzer {
+                            buf: self.buf,
+                            resource: Resource::Channel(ch),
+                        },
+                        Error::StopError(e),
+                    ))
+                }
             },
             Resource::Channel(ch) => ch,
         };
         match ch.transmit_continuously(&self.buf, LoopMode::Finite(count)) {
-            Ok(txn) => Ok(Buzzer { buf: self.buf, resource: Resource::ContinuousTx(txn) }),
+            Ok(txn) => Ok(Buzzer {
+                buf: self.buf,
+                resource: Resource::ContinuousTx(txn),
+            }),
             Err((e, ch)) => {
                 error!("count = {}", count);
-                Err((Buzzer { buf: self.buf, resource: Resource::Channel(ch) }, Error::TxError(e)))
-            },
+                Err((
+                    Buzzer {
+                        buf: self.buf,
+                        resource: Resource::Channel(ch),
+                    },
+                    Error::TxError(e),
+                ))
+            }
         }
     }
 }
