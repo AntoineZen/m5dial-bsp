@@ -3,6 +3,7 @@
 
 pub mod bsp;
 
+pub mod bm8563;
 pub mod buzzer;
 pub mod ft3267;
 
