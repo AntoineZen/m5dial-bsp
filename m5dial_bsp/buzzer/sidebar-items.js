@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":["Buzzer"]};
+window.SIDEBAR_ITEMS = {"enum":["Error"],"struct":["Buzzer"]};
