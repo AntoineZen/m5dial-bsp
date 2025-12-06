@@ -3,8 +3,8 @@
 
 pub mod bsp;
 
-pub mod bm8563;
 pub mod buzzer;
 pub mod ft3267;
+pub mod rtc8563;
 
 pub use bsp::M5DialBsp;

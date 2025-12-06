@@ -4,22 +4,24 @@
 
 use embedded_hal::i2c::I2c;
 
-const I2C_BM8563_DEFAULT_ADDRESS: u8 = 0x51;
+pub const RTC8563_DEFAULT_I2C_ADDRESS: u8 = 0x51;
 
 const SECONDS_REG: u8 = 0x02;
-const MINTES_REG: u8 = 0x03;
-const HOURS_REG: u8 = 0x04;
+//const MINTES_REG: u8 = 0x03;
+//const HOURS_REG: u8 = 0x04;
 const DAYS_REG: u8 = 0x05;
-const WEEKDAY_REG: u8 = 0x06;
-const MONTHS_REG: u8 = 0x07;
-const YEAR_REG: u8 = 0x08;
+//const WEEKDAY_REG: u8 = 0x06;
+//const MONTHS_REG: u8 = 0x07;
+//const YEAR_REG: u8 = 0x08;
 
+#[derive(Debug, Clone, Copy)]
 pub struct Time {
     pub hours: u8,
     pub minutes: u8,
     pub seconds: u8,
 }
 
+#[derive(Debug, Clone, Copy)]
 pub struct Date {
     pub week_day: u8,
     pub month: u8,
@@ -27,7 +29,7 @@ pub struct Date {
     pub year: u16,
 }
 
-pub struct BM8563Rtc {
+pub struct Rtc8563 {
     address: u8,
 }
 
@@ -35,24 +37,24 @@ pub type Bcd = u8;
 
 fn bcd2byte(bdc: Bcd) -> u8 {
     let dec = (bdc & 0xF0) >> 4;
-    let unit = bdc & 0xF0;
+    let unit = bdc & 0x0F;
 
-    dec * 10 + unit
+    (10 * dec) + unit
 }
 
 fn byte2bcd(value: u8) -> Bcd {
-    let mut bcd_high = 0;
-    let mut bcd_low = value;
+    let mut bcd_high: u8 = 0;
+    let mut bcd_low: u8 = value;
 
     while bcd_low >= 10 {
         bcd_high += 1;
         bcd_low -= 10;
     }
 
-    bcd_high << 4 + bcd_low
+    (bcd_high << 4) + bcd_low
 }
 
-impl BM8563Rtc {
+impl Rtc8563 {
     pub fn new(address: u8) -> Self {
         Self { address }
     }
@@ -79,7 +81,7 @@ impl BM8563Rtc {
         }
     }
 
-    pub fn set_time<T: I2c>(&self, bus: &mut T, time: Time) {
+    pub fn set_time<T: I2c>(&self, bus: &mut T, time: &Time) {
         let buffer: [u8; 4] = [
             SECONDS_REG,
             byte2bcd(time.seconds),
