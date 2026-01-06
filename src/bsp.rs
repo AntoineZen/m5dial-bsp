@@ -45,13 +45,6 @@ pub type M5DialDisplay = Gc9a01<
 
 pub type M5DialEncoder = Rotary<Input<'static>, Input<'static>, DefaultPhase>;
 
-pub struct TouchControl {
-    // Board I2C bus
-    tp_i2c: EspI2C<'static, Blocking>,
-    // Touch screen controller
-    touch: Ft3267,
-}
-
 /// Holds the board peripherals
 pub struct M5DialBsp {
     // Backlit command
@@ -129,8 +122,6 @@ macro_rules! get_screen {
 }
 
 /// Get the touch screen controller
-///
-/// See type TouchControl
 #[macro_export]
 macro_rules! get_touch {
     ($tp_i2c:ident) => {{

@@ -14,19 +14,19 @@ const DAYS_REG: u8 = 0x05;
 //const MONTHS_REG: u8 = 0x07;
 //const YEAR_REG: u8 = 0x08;
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Default)]
 pub struct Time {
     pub hours: u8,
     pub minutes: u8,
     pub seconds: u8,
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Default)]
 pub struct Date {
     pub week_day: u8,
     pub month: u8,
     pub day: u8,
-    pub year: u16,
+    pub year: i16,
 }
 
 pub struct Rtc8563 {
@@ -104,14 +104,14 @@ impl Rtc8563 {
             week_day: bcd2byte(buffer[1] & 0x0f),
             month: bcd2byte(buffer[2] & 0x1f),
             year: if buffer[2] & 0x80 == 0x80 {
-                1900 + bcd2byte(buffer[3]) as u16
+                1900 + bcd2byte(buffer[3]) as i16
             } else {
-                2000 + bcd2byte(buffer[3]) as u16
+                2000 + bcd2byte(buffer[3]) as i16
             },
         }
     }
 
-    pub fn set_date<T: I2c>(&self, bus: &mut T, date: Date) {
+    pub fn set_date<T: I2c>(&self, bus: &mut T, date: &Date) {
         let mut buffer: [u8; 5] = [DAYS_REG, 0, 0, 0, 0];
         buffer[1] = byte2bcd(date.day) & 0x3f;
         buffer[2] = byte2bcd(date.week_day) & 0x0f;
