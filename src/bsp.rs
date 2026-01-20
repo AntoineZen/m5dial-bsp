@@ -25,6 +25,7 @@ pub use gc9a01::{mode::BufferedGraphics, prelude::*, Gc9a01, SPIDisplayInterface
 
 // Touch screen driver (local)
 pub use crate::ft3267::{Ft3267, TouchPoint};
+pub use crate::rtc8563::{Rtc8563, RTC8563_DEFAULT_I2C_ADDRESS};
 
 // Rotary encoder
 pub use rotary_encoder_hal::{DefaultPhase, Rotary};
@@ -43,13 +44,6 @@ pub type M5DialDisplay = Gc9a01<
 >;
 
 pub type M5DialEncoder = Rotary<Input<'static>, Input<'static>, DefaultPhase>;
-
-pub struct TouchControl {
-    // Board I2C bus
-    tp_i2c: EspI2C<'static, Blocking>,
-    // Touch screen controller
-    touch: Ft3267,
-}
 
 /// Holds the board peripherals
 pub struct M5DialBsp {
@@ -128,19 +122,32 @@ macro_rules! get_screen {
 }
 
 /// Get the touch screen controller
-///
-/// See type TouchControl
 #[macro_export]
 macro_rules! get_touch {
+    ($tp_i2c:ident) => {{
+        let touch = Ft3267::new(0);
+        touch.init(&mut $tp_i2c);
+        touch
+    }};
+}
+
+#[macro_export]
+macro_rules! get_rtc {
+    ($tp_i2c:ident) => {{
+        let rtc = Rtc8563::new(RTC8563_DEFAULT_I2C_ADDRESS);
+        rtc.init(&mut $tp_i2c);
+        rtc
+    }};
+}
+
+/// Get the the "tp" internal I2C Bus
+#[macro_export]
+macro_rules! get_internal_i2C {
     ($peripherals:ident) => {{
-        let mut tp_i2c = EspI2C::new($peripherals.I2C0, I2cConfig::default())
+        EspI2C::new($peripherals.I2C0, I2cConfig::default())
             .expect("Failed to get I2C0")
             .with_sda($peripherals.GPIO11)
-            .with_scl($peripherals.GPIO12);
-        let touch = Ft3267::new(0);
-        touch.init(&mut tp_i2c);
-
-        TouchControl::new(tp_i2c, touch)
+            .with_scl($peripherals.GPIO12)
     }};
 }
 
@@ -151,7 +158,7 @@ macro_rules! get_port_a_i2c {
         EspI2C::new($peripherals.I2C1, I2cConfig::default())
             .expect("Failed to get I2C1")
             .with_sda($peripherals.GPIO13)
-            .with_scl($peripherals.GPIO15);
+            .with_scl($peripherals.GPIO15)
     }};
 }
 
@@ -249,28 +256,5 @@ impl M5DialBsp {
         } else {
             None
         }
-    }
-}
-
-impl TouchControl {
-    pub fn new(tp_i2c: EspI2C<'static, Blocking>, touch: Ft3267) -> TouchControl {
-        TouchControl { tp_i2c, touch }
-    }
-    /// Query if the touch screen is touched. If touch screen
-    /// is un-touched, return None. Return Some() with detected
-    /// finger count if touched (supports multi-touch).
-    pub fn count(&mut self) -> Option<u8> {
-        let touch_count = self.touch.pool(&mut self.tp_i2c);
-
-        if touch_count > 0 {
-            Some(touch_count)
-        } else {
-            None
-        }
-    }
-
-    /// Get Finger position for finger 'n'.
-    pub fn position(&mut self, n: u8) -> TouchPoint {
-        self.touch.get_point(&mut self.tp_i2c, n)
     }
 }

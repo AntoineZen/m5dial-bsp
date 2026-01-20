@@ -12,7 +12,7 @@ Feature list/roadmap:
  - [X] Power management (Shutdown)
  - [X] Touch-screen (FT3267)
  - [X] Buzzer
- - [ ] Real-time clock (BM8563)
+ - [X] Real-time clock (BM8563)
  - [X] Port A (I2C)
  - [X] Port B
  - [X] Upgrade to be compatible to esp-hal v1.0.0
@@ -51,6 +51,7 @@ Examples are located in the `examples` folder. Here is an index:
  - [screen_counter.rs](examples/screen_counter.rs): Demonstrate the rotary encoder usage.
  - [screen_counter_irq.rs](examples/screen_counter_irq.rs):  Demonstrate the rotary encoder usage, using interrupts.
  - [touch.rs](examples/touch.rs): Demonstrate the touchscreen.
+ - [clock.rs](examples/clock.rs): A clock application that demonstrate the RTC usage.
 
 ## License
 

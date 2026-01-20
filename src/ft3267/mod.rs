@@ -105,6 +105,19 @@ impl Ft3267 {
         raw_data[0] & 0x0f
     }
 
+    /// Query if the touch screen is touched. If touch screen
+    /// is un-touched, return None. Return Some() with detected
+    /// finger count if touched (supports multi-touch).
+    pub fn count<T: I2c>(&self, bus: &mut T) -> Option<u8> {
+        let touch_count = self.pool(bus);
+
+        if touch_count > 0 {
+            Some(touch_count)
+        } else {
+            None
+        }
+    }
+
     /// Get the coordinate of a touch point
     ///
     /// n touch point index.

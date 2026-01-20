@@ -272,6 +272,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "eg-seven-segment"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7e7d2f54ed234b333c71865c641906175a0d58bf366534ba5b8ded74b524b87b"
+dependencies = [
+ "bitflags 2.9.4",
+ "embedded-graphics",
+]
+
+[[package]]
 name = "either"
 version = "1.15.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1000,6 +1010,7 @@ dependencies = [
  "critical-section",
  "defmt 0.3.100",
  "defmt-rtt",
+ "eg-seven-segment",
  "embedded-graphics",
  "embedded-hal 1.0.0",
  "embedded-hal-bus",
