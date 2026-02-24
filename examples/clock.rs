@@ -272,7 +272,8 @@ fn main() -> ! {
     let rtc = m5dial_bsp::get_rtc!(tp_i2c);
 
     // Show must go on
-    board.set_backlight(true);
+    m5dial_bsp::make_display_backlight!(bl, peripherals);
+    bl.set_backlight(80);
 
     // Memory allocator
     esp_alloc::heap_allocator!(size: 72 * 1024);

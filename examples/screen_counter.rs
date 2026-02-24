@@ -44,7 +44,7 @@ fn main() -> ! {
     let mut board = m5dial_bsp::board_init!(peripherals);
 
     // Show must go on !
-    board.set_backlight(true);
+    m5dial_bsp::make_display_backlight!(backlight, peripherals);
 
     const STYLE_LIST: [MonoTextStyle<Rgb565>; 7] = [
         MonoTextStyle::new(&THE_FONT, RgbColor::BLUE),
