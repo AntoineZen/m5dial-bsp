@@ -299,15 +299,17 @@ fn main() -> ! {
 
         if clock.is_running() {
             // Get the RTC time and update the Clock APP
-            let now = rtc.get_time(&mut tp_i2c);
-            clock.update_from(&now);
+            if let Ok(now) = rtc.get_time(&mut tp_i2c) {
+                clock.update_from(&now);
+            }
 
-            let today = rtc.get_date(&mut tp_i2c);
-            clock.update_date_from(&today);
+            if let Ok(today) = rtc.get_date(&mut tp_i2c) {
+                clock.update_date_from(&today);
+            }
         } else {
             // Get the on-screen time & Date and set the RTC
-            rtc.set_time(&mut tp_i2c, clock.get_time());
-            rtc.set_date(&mut tp_i2c, clock.get_date());
+            let _ = rtc.set_time(&mut tp_i2c, clock.get_time());
+            let _ = rtc.set_date(&mut tp_i2c, clock.get_date());
         }
 
         // Update display

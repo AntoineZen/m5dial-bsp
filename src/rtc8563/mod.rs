@@ -2,7 +2,7 @@
 //!
 //! Mainly ported to Rust from this repo: https://github.com/tanakamasayuki/I2C_BM8563
 
-use embedded_hal::i2c::I2c;
+use embedded_hal::{i2c::I2c, spi::Error};
 
 pub const RTC8563_DEFAULT_I2C_ADDRESS: u8 = 0x51;
 
@@ -62,26 +62,25 @@ impl Rtc8563 {
     /// Initialize chip.
     ///
     /// This clear Control/status 1 and 2.
-    pub fn init<T: I2c>(&self, bus: &mut T) {
+    pub fn init<T: I2c>(&self, bus: &mut T) -> Result<(), T::Error> {
         let buffer: [u8; 3] = [0, 0, 0];
-        bus.write(self.address, &buffer).expect("I2C write error");
+        bus.write(self.address, &buffer)
     }
 
-    pub fn get_time<T: I2c>(&self, bus: &mut T) -> Time {
+    pub fn get_time<T: I2c>(&self, bus: &mut T) -> Result<Time, T::Error> {
         let addr_buffer: [u8; 1] = [SECONDS_REG];
         let mut buffer: [u8; 3] = [0, 0, 0];
 
-        bus.write_read(self.address, &addr_buffer, &mut buffer)
-            .expect("I2C read error");
+        bus.write_read(self.address, &addr_buffer, &mut buffer)?;
 
-        Time {
+        Ok(Time {
             hours: bcd2byte(buffer[2] & 0x3F),
             minutes: bcd2byte(buffer[1] & 0x7F),
             seconds: bcd2byte(buffer[0] & 0x7F),
-        }
+        })
     }
 
-    pub fn set_time<T: I2c>(&self, bus: &mut T, time: &Time) {
+    pub fn set_time<T: I2c>(&self, bus: &mut T, time: &Time) -> Result<(), T::Error> {
         let buffer: [u8; 4] = [
             SECONDS_REG,
             byte2bcd(time.seconds),
@@ -89,17 +88,16 @@ impl Rtc8563 {
             byte2bcd(time.hours),
         ];
 
-        bus.write(self.address, &buffer).expect("I2C write error");
+        bus.write(self.address, &buffer)
     }
 
-    pub fn get_date<T: I2c>(&self, bus: &mut T) -> Date {
+    pub fn get_date<T: I2c>(&self, bus: &mut T) -> Result<Date, T::Error> {
         let addr_buffer: [u8; 1] = [DAYS_REG];
         let mut buffer: [u8; 4] = [0; 4];
 
-        bus.write_read(self.address, &addr_buffer, &mut buffer)
-            .expect("I2C read error");
+        bus.write_read(self.address, &addr_buffer, &mut buffer)?;
 
-        Date {
+        Ok(Date {
             day: bcd2byte(buffer[0] & 0x3f),
             week_day: bcd2byte(buffer[1] & 0x0f),
             month: bcd2byte(buffer[2] & 0x1f),
@@ -108,10 +106,10 @@ impl Rtc8563 {
             } else {
                 2000 + bcd2byte(buffer[3]) as i16
             },
-        }
+        })
     }
 
-    pub fn set_date<T: I2c>(&self, bus: &mut T, date: &Date) {
+    pub fn set_date<T: I2c>(&self, bus: &mut T, date: &Date) -> Result<(), T::Error> {
         let mut buffer: [u8; 5] = [DAYS_REG, 0, 0, 0, 0];
         buffer[1] = byte2bcd(date.day) & 0x3f;
         buffer[2] = byte2bcd(date.week_day) & 0x0f;
@@ -122,25 +120,28 @@ impl Rtc8563 {
         }
         buffer[4] = byte2bcd((date.year % 100) as u8);
 
-        bus.write(self.address, &buffer).expect("I2C write failed");
+        bus.write(self.address, &buffer)
     }
 
     #[allow(dead_code)]
-    fn write_register<T: I2c>(&self, bus: &mut T, reg_addr: u8, reg_value: u8) {
+    fn write_register<T: I2c>(
+        &self,
+        bus: &mut T,
+        reg_addr: u8,
+        reg_value: u8,
+    ) -> Result<(), T::Error> {
         let buffer: [u8; 2] = [reg_addr, reg_value];
 
-        // TODO : Error handling
-        let _ = bus.write(self.address, &buffer);
+        bus.write(self.address, &buffer)
     }
 
     #[allow(dead_code)]
-    fn read_register<T: I2c>(&self, bus: &mut T, reg_addr: u8) -> u8 {
+    fn read_register<T: I2c>(&self, bus: &mut T, reg_addr: u8) -> Result<u8, T::Error> {
         let addr_buffer: [u8; 1] = [reg_addr];
         let mut buffer: [u8; 1] = [0];
 
-        // TODO : Error handling
-        let _ = bus.write_read(self.address, &addr_buffer, &mut buffer);
+        bus.write_read(self.address, &addr_buffer, &mut buffer)?;
 
-        buffer[0]
+        Ok(buffer[0])
     }
 }
