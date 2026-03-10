@@ -28,3 +28,6 @@ run-touch:
 # Run clock screen example.
 run-clock:
     cargo run --example clock
+
+run-backlight:
+    cargo run --example backlight
