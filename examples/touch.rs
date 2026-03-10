@@ -31,7 +31,7 @@ fn main() -> ! {
     let peripherals = esp_hal::init(config);
 
     let mut tp_i2c = m5dial_bsp::get_internal_i2C!(peripherals);
-    let mut touch = m5dial_bsp::get_touch!(tp_i2c);
+    let touch = m5dial_bsp::get_touch!(tp_i2c);
     let mut display = m5dial_bsp::get_screen!(peripherals);
 
     // Initialize the BSP
@@ -69,13 +69,20 @@ fn main() -> ! {
             }
         }
 
-        if let Some(_) = touch.count(&mut tp_i2c) {
-            //info!("Touch: {}", touch_count);
-            let p = touch.get_point(&mut tp_i2c, 0);
-            info!("Pos: x={} y={}", p.x, p.y);
-            point.x = p.x.into();
-            point.y = p.y.into();
-            need_redraw = true;
+        if let Ok(x) = touch.count(&mut tp_i2c) {
+            if let Some(_) = x {
+                //info!("Touch: {}", touch_count);
+                if let Ok(p) = touch.get_point(&mut tp_i2c, 0) {
+                    info!("Pos: x={} y={}", p.x, p.y);
+                    point.x = p.x.into();
+                    point.y = p.y.into();
+                    need_redraw = true;
+                } else {
+                    error!("I2C error");
+                }
+            }
+        } else {
+            error!("I2C error");
         }
 
         if need_redraw {
