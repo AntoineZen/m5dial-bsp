@@ -41,23 +41,23 @@ pub struct TouchPoint {
 }
 
 impl Ft3267 {
-    fn write_register<T: I2c>(
+    fn write_register<I2C: I2c>(
         &self,
-        bus: &mut T,
+        bus: &mut I2C,
         reg_addr: u8,
         reg_value: u8,
-    ) -> Result<(), T::Error> {
+    ) -> Result<(), I2C::Error> {
         let buffer: [u8; 2] = [reg_addr, reg_value];
 
         bus.write(self.address, &buffer)
     }
 
-    fn read_register<T: I2c>(
+    fn read_register<I2C: I2c>(
         &self,
-        bus: &mut T,
+        bus: &mut I2C,
         reg_addr: u8,
         buffer: &mut [u8],
-    ) -> Result<(), T::Error> {
+    ) -> Result<(), I2C::Error> {
         let addr_buffer: [u8; 1] = [reg_addr];
 
         // TODO : Error handling
@@ -75,7 +75,7 @@ impl Ft3267 {
     }
 
     /// Initialize the driver IC.
-    pub fn init<T: I2c>(&self, bus: &mut T) -> Result<&Self, T::Error> {
+    pub fn init<I2C: I2c>(&self, bus: &mut I2C) -> Result<&Self, I2C::Error> {
         self.write_register(bus, regs::FT3267_ID_G_THGROUP, 70)?;
 
         // valid touching peak detect threshold
@@ -108,7 +108,7 @@ impl Ft3267 {
     /// Pool if the touch screen is touched.
     ///
     /// Returns the number of current touch points.
-    pub fn pool<T: I2c>(&self, bus: &mut T) -> Result<u8, T::Error> {
+    pub fn pool<I2C: I2c>(&self, bus: &mut I2C) -> Result<u8, I2C::Error> {
         let mut raw_data: [u8; 1] = [0];
         self.read_register(bus, regs::FT3267_TOUCH_POINTS, &mut raw_data)?;
         Ok(raw_data[0] & 0x0f)
@@ -117,7 +117,7 @@ impl Ft3267 {
     /// Query if the touch screen is touched. If touch screen
     /// is un-touched, return None. Return Some() with detected
     /// finger count if touched (supports multi-touch).
-    pub fn count<T: I2c>(&self, bus: &mut T) -> Result<Option<u8>, T::Error> {
+    pub fn count<I2C: I2c>(&self, bus: &mut I2C) -> Result<Option<u8>, I2C::Error> {
         let touch_count = self.pool(bus)?;
 
         if touch_count > 0 {
@@ -131,7 +131,7 @@ impl Ft3267 {
     ///
     /// n touch point index.
     /// return touch point coordinate.
-    pub fn get_point<T: I2c>(&self, bus: &mut T, n: u8) -> Result<TouchPoint, T::Error> {
+    pub fn get_point<I2C: I2c>(&self, bus: &mut I2C, n: u8) -> Result<TouchPoint, I2C::Error> {
         let mut buf: [u8; 4] = [0; 4];
 
         match n {
