@@ -38,7 +38,8 @@ fn main() -> ! {
     let mut board = m5dial_bsp::board_init!(peripherals);
 
     // Show must go on !
-    board.set_backlight(true);
+    m5dial_bsp::make_display_backlight!(bl, peripherals);
+    bl.set_backlight(100);
 
     const COLOR_LIST: [Rgb565; 7] = [
         RgbColor::BLUE,

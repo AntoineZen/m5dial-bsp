@@ -23,3 +23,11 @@ run-counter-irq:
 # Run touch screen example.
 run-touch:
     cargo run --example touch
+
+
+# Run clock screen example.
+run-clock:
+    cargo run --example clock
+
+run-backlight:
+    cargo run --example backlight

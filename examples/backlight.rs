@@ -28,7 +28,7 @@ use {defmt_rtt as _, esp_backtrace as _};
 
 use esp_hal::gpio::{Event, Input, Io, Level, Output};
 use esp_hal::{handler, ram};
-use m5dial_bsp::bsp::*;
+use m5dial_bsp::{backlight, bsp::*};
 
 extern crate alloc;
 
@@ -135,6 +135,7 @@ fn main() -> ! {
 
     let mut old_pos: i32 = 0;
     let mut need_redraw = true;
+    let mut backlight_intensity = 80;
     loop {
         // Change Test color on button push
         if let Some(state) = board.has_button_changed() {
@@ -151,32 +152,25 @@ fn main() -> ! {
             debug!("Encoder at new position {} ({})", current_pos, old_pos);
             need_redraw = true;
 
-            let pos_delta = current_pos - old_pos;
-            if pos_delta > 0 {
-                for _ in 0..pos_delta {
-                    tone_freq = (tone_freq * 1059) / 1000;
-                }
-            } else {
-                for _ in 0..-pos_delta {
-                    tone_freq = (tone_freq * 1000) / 1059;
-                }
-            };
-            debug!("tone_freq = {}", tone_freq);
-            buzzer = match buzzer.tone(Rate::from_hz(tone_freq), Duration::from_millis(100)) {
-                Ok(buzzer) => buzzer,
-                Err((buzzer, e)) => {
-                    error!("{}", Debug2Format(&e));
-                    buzzer
-                }
-            };
+            let increment = current_pos - old_pos;
+            backlight_intensity += increment;
+
+            // Saturation
+            if backlight_intensity > 100 {
+                backlight_intensity = 100;
+            }
+            if backlight_intensity <= 0 {
+                backlight_intensity = 0;
+            }
 
             old_pos = current_pos;
         }
 
         // Redraw screen if need refresh
         if need_redraw {
+            bl.set_backlight(backlight_intensity as u8);
             buffer.clear();
-            if write!(&mut buffer, "Position {}", current_pos).is_ok() {
+            if write!(&mut buffer, "Backlight {}", backlight_intensity).is_ok() {
                 display.clear();
                 // Create a text at position (20, 30) and draw it using the previously defined style
                 Text::with_alignment(

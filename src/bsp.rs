@@ -11,6 +11,11 @@ pub use esp_hal::{
     delay::Delay,
     gpio::{Input, InputConfig, Level, Output, OutputConfig, OutputPin, Pull},
     i2c::master::{Config as I2cConfig, I2c as EspI2C},
+    ledc::{
+        channel::{self, Channel, ChannelHW, ChannelIFace},
+        timer::{self, Timer, TimerIFace},
+        LSGlobalClkSource, Ledc, LowSpeed,
+    },
     rmt::Rmt,
     spi::{
         master::{Config as SpiConfig, Spi},
@@ -33,6 +38,9 @@ pub use rotary_encoder_hal::{DefaultPhase, Rotary};
 // Buzzer driver (local)
 pub use crate::buzzer::Buzzer;
 
+// Backlight driver (local):
+pub use crate::backlight::M5DialBackLight;
+
 /// Define a type alias for the display
 pub type M5DialDisplay = Gc9a01<
     SPIInterface<
@@ -47,9 +55,6 @@ pub type M5DialEncoder = Rotary<Input<'static>, Input<'static>, DefaultPhase>;
 
 /// Holds the board peripherals
 pub struct M5DialBsp {
-    // Backlit command
-    display_bl: Output<'static>,
-
     /// HOLD signal, must be set HIGH after startup to maintain power. Can be set LOW to power off.
     /// Note that this signal does not work on USB power
     hold: Output<'static>,
@@ -196,32 +201,42 @@ macro_rules! get_buzzer {
 macro_rules! board_init {
     ($peripherals:ident) => {
         M5DialBsp::new(
-            Output::new($peripherals.GPIO9, Level::Low, OutputConfig::default()),
             Output::new($peripherals.GPIO46, Level::High, OutputConfig::default()),
             Input::new($peripherals.GPIO42, InputConfig::default()),
         )
     };
 }
 
+#[macro_export]
+macro_rules! make_display_backlight {
+    ($name:ident, $peripherals:ident) => {
+        let mut ledc = Ledc::new($peripherals.LEDC);
+        ledc.set_global_slow_clock(LSGlobalClkSource::APBClk);
+
+        let mut lstimer0 = ledc.timer::<LowSpeed>(timer::Number::Timer0);
+        lstimer0
+            .configure(timer::config::Config {
+                duty: timer::config::Duty::Duty5Bit,
+                clock_source: timer::LSClockSource::APBClk,
+                frequency: Rate::from_khz(24),
+            })
+            .expect("Fail to configure timer");
+
+        let mut $name = M5DialBackLight::new(
+            Output::new($peripherals.GPIO9, Level::Low, OutputConfig::default()),
+            &ledc,
+            &lstimer0,
+        );
+    };
+}
+
 impl M5DialBsp {
-    pub fn new(bl: Output<'static>, hold: Output<'static>, wake: Input<'static>) -> M5DialBsp {
+    pub fn new(hold: Output<'static>, wake: Input<'static>) -> Self {
         let wake_state = wake.is_low();
         M5DialBsp {
-            display_bl: bl,
             hold,
             wake,
             last_wake_state: wake_state,
-        }
-    }
-    /// Screen backlight control
-    ///
-    /// ## Arguments:
-    ///    - **state**: Set backlight ON if true, OFF if false
-    pub fn set_backlight(&mut self, state: bool) {
-        if state {
-            self.display_bl.set_high();
-        } else {
-            self.display_bl.set_low();
         }
     }
 

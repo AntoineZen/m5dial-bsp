@@ -125,6 +125,7 @@ impl Rtc8563 {
         bus.write(self.address, &buffer).expect("I2C write failed");
     }
 
+    #[allow(dead_code)]
     fn write_register<T: I2c>(&self, bus: &mut T, reg_addr: u8, reg_value: u8) {
         let buffer: [u8; 2] = [reg_addr, reg_value];
 
@@ -132,6 +133,7 @@ impl Rtc8563 {
         let _ = bus.write(self.address, &buffer);
     }
 
+    #[allow(dead_code)]
     fn read_register<T: I2c>(&self, bus: &mut T, reg_addr: u8) -> u8 {
         let addr_buffer: [u8; 1] = [reg_addr];
         let mut buffer: [u8; 1] = [0];
