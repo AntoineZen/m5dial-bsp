@@ -20,14 +20,7 @@ Feature list/roadmap:
 ## How to use
 
 First generate a base project using [esp-generate](https://github.com/esp-rs/esp-generate)  as described in its documentation.
-Then, add this crate to your `Cargo.toml`:
-
-```toml
-[dependencies]
-....
-m5dial-bsp= "0.5.0"
-....
-```
+Then, run `cargo add m5dial-bsp`.
 
 In your main function then initialize this hall and use it:
 
