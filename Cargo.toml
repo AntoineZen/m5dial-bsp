@@ -9,6 +9,11 @@ description = "Board support package for the M5 Dial."
 license-file = "LICENSE"
 readme = "README.md"
 
+[workspace]
+resolver = "3"
+members = ["ft3267", "rtc8563"]
+
+
 [dependencies]
 critical-section = "1.2.0"
 defmt = "0.3.100"
