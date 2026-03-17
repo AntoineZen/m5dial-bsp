@@ -131,7 +131,7 @@ macro_rules! get_screen {
 macro_rules! get_touch {
     ($tp_i2c:ident) => {{
         let touch = Ft3267::new(0);
-        touch.init(&mut $tp_i2c);
+        let _ = touch.init(&mut $tp_i2c);
         touch
     }};
 }

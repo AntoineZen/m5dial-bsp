@@ -41,18 +41,27 @@ pub struct TouchPoint {
 }
 
 impl Ft3267 {
-    fn write_register<T: I2c>(&self, bus: &mut T, reg_addr: u8, reg_value: u8) {
+    fn write_register<I2C: I2c>(
+        &self,
+        bus: &mut I2C,
+        reg_addr: u8,
+        reg_value: u8,
+    ) -> Result<(), I2C::Error> {
         let buffer: [u8; 2] = [reg_addr, reg_value];
 
-        // TODO : Error handling
-        let _ = bus.write(self.address, &buffer);
+        bus.write(self.address, &buffer)
     }
 
-    fn read_register<T: I2c>(&self, bus: &mut T, reg_addr: u8, buffer: &mut [u8]) {
+    fn read_register<I2C: I2c>(
+        &self,
+        bus: &mut I2C,
+        reg_addr: u8,
+        buffer: &mut [u8],
+    ) -> Result<(), I2C::Error> {
         let addr_buffer: [u8; 1] = [reg_addr];
 
         // TODO : Error handling
-        let _ = bus.write_read(self.address, &addr_buffer, buffer);
+        bus.write_read(self.address, &addr_buffer, buffer)
     }
 
     /// Build a new FT3257 driver
@@ -66,55 +75,55 @@ impl Ft3267 {
     }
 
     /// Initialize the driver IC.
-    pub fn init<T: I2c>(&self, bus: &mut T) -> &Self {
-        self.write_register(bus, regs::FT3267_ID_G_THGROUP, 70);
+    pub fn init<I2C: I2c>(&self, bus: &mut I2C) -> Result<&Self, I2C::Error> {
+        self.write_register(bus, regs::FT3267_ID_G_THGROUP, 70)?;
 
         // valid touching peak detect threshold
-        self.write_register(bus, regs::FT3267_ID_G_THPEAK, 60);
+        self.write_register(bus, regs::FT3267_ID_G_THPEAK, 60)?;
 
         // Touch focus threshold
-        self.write_register(bus, regs::FT3267_ID_G_THCAL, 16);
+        self.write_register(bus, regs::FT3267_ID_G_THCAL, 16)?;
 
         // threshold when there is surface water
-        self.write_register(bus, regs::FT3267_ID_G_THWATER, 60);
+        self.write_register(bus, regs::FT3267_ID_G_THWATER, 60)?;
 
         // threshold of temperature compensation
-        self.write_register(bus, regs::FT3267_ID_G_THTEMP, 10);
+        self.write_register(bus, regs::FT3267_ID_G_THTEMP, 10)?;
 
         // Touch difference threshold
-        self.write_register(bus, regs::FT3267_ID_G_THDIFF, 20);
+        self.write_register(bus, regs::FT3267_ID_G_THDIFF, 20)?;
 
         // Delay to enter 'Monitor' status (s)
-        self.write_register(bus, regs::FT3267_ID_G_TIME_ENTER_MONITOR, 2);
+        self.write_register(bus, regs::FT3267_ID_G_TIME_ENTER_MONITOR, 2)?;
 
         // Period of 'Active' status (ms)
-        self.write_register(bus, regs::FT3267_ID_G_PERIODACTIVE, 12);
+        self.write_register(bus, regs::FT3267_ID_G_PERIODACTIVE, 12)?;
 
         // Timer to enter 'idle' when in 'Monitor' (ms)
-        self.write_register(bus, regs::FT3267_ID_G_PERIODMONITOR, 40);
+        self.write_register(bus, regs::FT3267_ID_G_PERIODMONITOR, 40)?;
 
-        self
+        Ok(self)
     }
 
     /// Pool if the touch screen is touched.
     ///
     /// Returns the number of current touch points.
-    pub fn pool<T: I2c>(&self, bus: &mut T) -> u8 {
+    pub fn pool<I2C: I2c>(&self, bus: &mut I2C) -> Result<u8, I2C::Error> {
         let mut raw_data: [u8; 1] = [0];
-        self.read_register(bus, regs::FT3267_TOUCH_POINTS, &mut raw_data);
-        raw_data[0] & 0x0f
+        self.read_register(bus, regs::FT3267_TOUCH_POINTS, &mut raw_data)?;
+        Ok(raw_data[0] & 0x0f)
     }
 
     /// Query if the touch screen is touched. If touch screen
     /// is un-touched, return None. Return Some() with detected
     /// finger count if touched (supports multi-touch).
-    pub fn count<T: I2c>(&self, bus: &mut T) -> Option<u8> {
-        let touch_count = self.pool(bus);
+    pub fn count<I2C: I2c>(&self, bus: &mut I2C) -> Result<Option<u8>, I2C::Error> {
+        let touch_count = self.pool(bus)?;
 
         if touch_count > 0 {
-            Some(touch_count)
+            Ok(Some(touch_count))
         } else {
-            None
+            Ok(None)
         }
     }
 
@@ -122,21 +131,21 @@ impl Ft3267 {
     ///
     /// n touch point index.
     /// return touch point coordinate.
-    pub fn get_point<T: I2c>(&self, bus: &mut T, n: u8) -> TouchPoint {
+    pub fn get_point<I2C: I2c>(&self, bus: &mut I2C, n: u8) -> Result<TouchPoint, I2C::Error> {
         let mut buf: [u8; 4] = [0; 4];
 
         match n {
             0 => {
-                self.read_register(bus, regs::FT3267_TOUCH1_XH, &mut buf);
+                self.read_register(bus, regs::FT3267_TOUCH1_XH, &mut buf)?;
             }
             1 => {
-                self.read_register(bus, regs::FT3267_TOUCH2_XH, &mut buf);
+                self.read_register(bus, regs::FT3267_TOUCH2_XH, &mut buf)?;
             }
             2 => {
-                self.read_register(bus, regs::FT3267_TOUCH3_XH, &mut buf);
+                self.read_register(bus, regs::FT3267_TOUCH3_XH, &mut buf)?;
             }
             3 => {
-                self.read_register(bus, regs::FT3267_TOUCH4_XH, &mut buf);
+                self.read_register(bus, regs::FT3267_TOUCH4_XH, &mut buf)?;
             }
             _ => {}
         }
@@ -144,10 +153,11 @@ impl Ft3267 {
         let x = (((buf[0] & 0x0f) as u16) << 8) + buf[1] as u16;
         let y = (((buf[2] & 0x0f) as u16) << 8) + buf[3] as u16;
 
-        if self.rotation == 0 {
+        let coord = if self.rotation == 0 {
             TouchPoint { id: n, x, y }
         } else {
             TouchPoint { id: n, x: y, y: x }
-        }
+        };
+        Ok(coord)
     }
 }
