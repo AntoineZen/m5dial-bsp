@@ -5,7 +5,7 @@ pub mod bsp;
 
 pub mod backlight;
 pub mod buzzer;
-pub mod ft3267;
-pub mod rtc8563;
+pub use ft3267;
+pub use rtc8563;
 
 pub use bsp::M5DialBsp;

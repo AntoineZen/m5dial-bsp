@@ -29,6 +29,8 @@ fugit = "0.3.9"
 gc9a01-rs = "0.4.2"
 heapless = "0.9.2"
 rotary-encoder-hal = "0.6.0"
+ft3267 = {path="./ft3267"}
+rtc8563 = {path="./rtc8563"}
 
 
 [profile.dev]

@@ -2,6 +2,8 @@
 //!
 //! Ported from https://github.com/mmMicky/TouchLib/blob/main/src/ModulesFT3267.tpp
 
+#![no_std]
+
 // Register definitions
 #[allow(dead_code)]
 mod regs;
