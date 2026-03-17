@@ -806,6 +806,13 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3f9eec918d3f24069decb9af1554cad7c880e2da24a9afd88aca000531ab82c1"
 
 [[package]]
+name = "ft3267"
+version = "0.1.0"
+dependencies = [
+ "embedded-hal 1.0.0",
+]
+
+[[package]]
 name = "fugit"
 version = "0.3.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1018,10 +1025,12 @@ dependencies = [
  "esp-backtrace",
  "esp-bootloader-esp-idf",
  "esp-hal",
+ "ft3267",
  "fugit",
  "gc9a01-rs",
  "heapless 0.9.2",
  "rotary-encoder-hal",
+ "rtc8563",
 ]
 
 [[package]]
@@ -1248,6 +1257,13 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2a7862027e3cde9069e67d972bb07db0736c24f47abb1c2e3af5c4c37638d427"
 dependencies = [
  "either",
+ "embedded-hal 1.0.0",
+]
+
+[[package]]
+name = "rtc8563"
+version = "0.1.0"
+dependencies = [
  "embedded-hal 1.0.0",
 ]
 

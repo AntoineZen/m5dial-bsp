@@ -1,7 +1,7 @@
 //! BM8563 RTC driver
 //!
 //! Mainly ported to Rust from this repo: https://github.com/tanakamasayuki/I2C_BM8563
-
+#![no_std]
 use embedded_hal::i2c::I2c;
 
 pub const RTC8563_DEFAULT_I2C_ADDRESS: u8 = 0x51;
