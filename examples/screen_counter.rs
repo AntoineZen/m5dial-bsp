@@ -8,7 +8,7 @@ use esp_hal::{clock::CpuClock, delay::Delay};
 
 // Embedded graphics
 use embedded_graphics::{
-    mono_font::{ascii::FONT_10X20 as THE_FONT, MonoTextStyle},
+    mono_font::{MonoTextStyle, ascii::FONT_10X20 as THE_FONT},
     pixelcolor::Rgb565,
     prelude::*,
     text::Text,
@@ -23,7 +23,7 @@ use heapless::String;
 
 // Logging
 use core::fmt::Write;
-use defmt::{debug, error, info, Debug2Format};
+use defmt::{Debug2Format, debug, error, info};
 use {defmt_rtt as _, esp_backtrace as _};
 
 use m5dial_bsp::bsp::*;
@@ -37,7 +37,7 @@ fn main() -> ! {
     let config = esp_hal::Config::default().with_cpu_clock(CpuClock::max());
     let peripherals = esp_hal::init(config);
 
-    let buzzer = m5dial_bsp::get_buzzer!(peripherals);
+    let mut buzzer = m5dial_bsp::get_buzzer!(peripherals);
     let mut display = m5dial_bsp::get_screen!(peripherals);
     let mut encoder = m5dial_bsp::get_encoder!(peripherals);
 
@@ -68,7 +68,7 @@ fn main() -> ! {
 
     // Emit a sound
     let mut tone_freq: u32 = 261;
-    let mut buzzer = buzzer
+    buzzer
         .tone(Rate::from_hz(tone_freq), Duration::from_millis(100))
         .expect("start tone failed");
 
@@ -101,13 +101,11 @@ fn main() -> ! {
         pos += pos_delta;
 
         debug!("tone_freq = {}", tone_freq);
-        buzzer = match buzzer.tone(Rate::from_hz(tone_freq), Duration::from_millis(100)) {
-            Ok(buzzer) => buzzer,
-            Err((buzzer, e)) => {
+        buzzer
+            .tone(Rate::from_hz(tone_freq), Duration::from_millis(100))
+            .unwrap_or_else(|e| {
                 error!("{}", Debug2Format(&e));
-                buzzer
-            }
-        };
+            });
 
         // Redraw screen if need refresh
         if need_redraw {

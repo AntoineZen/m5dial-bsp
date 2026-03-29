@@ -1,15 +1,16 @@
+use core::cell::Cell;
 use core::result::Result::{Err, Ok};
 
 // ESP32 Hardware abstraction
 use defmt::error;
 use esp_hal::time::{Duration, Rate};
 use esp_hal::{
+    Blocking,
     gpio::{AnyPin, Level},
     rmt::{
         Channel, ContinuousTxTransaction, LoopMode, PulseCode, Rmt, Tx, TxChannelConfig,
         TxChannelCreator,
     },
-    Blocking,
 };
 
 const ESP32S3_RMT_DEFAULT_CLK_FREQ_HZ: u32 = 80_000_000;
@@ -23,19 +24,25 @@ pub enum Error {
     DurationTooLongForFreq((Duration, Rate)),
     StopError(esp_hal::rmt::Error),
     TxError(esp_hal::rmt::Error),
+    DefunkError,
 }
 
-#[derive(Debug)]
 enum Resource<'b> {
     Channel(Channel<'b, Blocking, Tx>),
     ContinuousTx(ContinuousTxTransaction<'b>),
+    Empty,
+}
+
+impl Default for Resource<'_> {
+    fn default() -> Self {
+        Resource::Empty
+    }
 }
 
 /// Buzzer driver using RMT peripheral to generate the signal.
-#[derive(Debug)]
 pub struct Buzzer<'b> {
     buf: [PulseCode; PULSE_COUNT + 1], // end marker required
-    resource: Resource<'b>,
+    resource: Cell<Resource<'b>>,
 }
 
 impl<'b> Buzzer<'b> {
@@ -46,7 +53,8 @@ impl<'b> Buzzer<'b> {
         let channel = rmt
             .channel0
             .configure_tx(
-                &TxChannelConfig::default()
+                pin,
+                TxChannelConfig::default()
                     .with_clk_divider(
                         (ESP32S3_RMT_DEFAULT_CLK_FREQ_HZ / CLK_FREQ_HZ)
                             .try_into()
@@ -59,24 +67,23 @@ impl<'b> Buzzer<'b> {
                     .with_carrier_low(1)
                     .with_carrier_level(Level::Low),
             )
-            .expect("RMT channel0 could not configure")
-            .with_pin(pin);
+            .expect("RMT channel0 could not configure");
         Buzzer {
             buf: [PulseCode::default(), PulseCode::end_marker()],
-            resource: Resource::Channel(channel),
+            resource: Cell::new(Resource::Channel(channel)),
         }
     }
 
-    pub fn tone(mut self, freq: Rate, duration: Duration) -> Result<Self, (Self, Error)> {
+    pub fn tone(&mut self, freq: Rate, duration: Duration) -> Result<(), Error> {
         if freq.as_hz() <= CLK_FREQ_HZ / (1 << 16) {
             // 50% duty on 15 bits is 16 bits for a single PulseCode -> ~49 Hz
-            return Err((self, Error::FreqTooLow(freq)));
+            return Err(Error::FreqTooLow(freq));
         }
 
         let wave_length = CLK_FREQ_HZ / (freq.as_hz()); // range checked by freq_hz
         let count_u32 = (duration.as_millis() as u32 * freq.as_hz()) / 1000;
         let count = if count_u32 > ESP32S3_RMT_MAX_TX_LOOP_NUM {
-            return Err((self, Error::DurationTooLongForFreq((duration, freq))));
+            return Err(Error::DurationTooLongForFreq((duration, freq)));
         } else {
             count_u32 as u16
         };
@@ -85,35 +92,25 @@ impl<'b> Buzzer<'b> {
         let low = (wave_length - high as u32) as u16;
         self.buf[0] = PulseCode::new(Level::High, high, Level::Low, low);
 
-        let ch = match self.resource {
+        let ch = match self.resource.take() {
             Resource::ContinuousTx(txn) => match txn.stop() {
                 Ok(ch) => ch,
                 Err((e, ch)) => {
-                    return Err((
-                        Buzzer {
-                            buf: self.buf,
-                            resource: Resource::Channel(ch),
-                        },
-                        Error::StopError(e),
-                    ))
+                    self.resource.set(Resource::Channel(ch));
+                    return Err(Error::StopError(e));
                 }
             },
             Resource::Channel(ch) => ch,
+            Resource::Empty => return Err(Error::DefunkError),
         };
         match ch.transmit_continuously(&self.buf, LoopMode::Finite(count)) {
-            Ok(txn) => Ok(Buzzer {
-                buf: self.buf,
-                resource: Resource::ContinuousTx(txn),
-            }),
-            Err((e, ch)) => {
-                error!("count = {}", count);
-                Err((
-                    Buzzer {
-                        buf: self.buf,
-                        resource: Resource::Channel(ch),
-                    },
-                    Error::TxError(e),
-                ))
+            Ok(txn) => {
+                self.resource.set(Resource::ContinuousTx(txn));
+                Ok(())
+            }
+            Err(e) => {
+                error!("count = {}", e);
+                Err(Error::TxError(e))
             }
         }
     }
